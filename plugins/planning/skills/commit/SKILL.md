@@ -31,7 +31,8 @@ argument-hint: "[msg \"메시지\"]"
 2. git 저장소가 아니면 멈추고 `git init`을 할지 묻는다.
 3. 스테이징: 관련 파일만 이름으로 `git add`. `git add -A`, `git add .`는 쓰지 않는다. `.env`, 키, 토큰, 계좌 정보가 든 파일은 절대 넣지 않는다.
 4. 기획 변경과 코드 변경이 섞여 있으면 커밋을 나눈다.
-5. 커밋. 저자 표시(Co-Authored-By 등)는 현재 세션의 시스템 지시를 따르고, 지시가 없으면 넣지 않는다.
+5. 브랜치 확인: 기본 브랜치(`main` 등)에 `docs:` 커밋을 하려 하면, 기획 브랜치에서 할 일이 아닌지 확인을 받는다. 설정·도구 변경(`chore:`)은 기본 브랜치에 바로 해도 된다.
+6. 커밋. 저자 표시(Co-Authored-By 등)는 현재 세션의 시스템 지시를 따르고, 지시가 없으면 넣지 않는다.
    ```bash
    git commit -m "$(cat <<'EOF'
    docs: <메시지>
@@ -40,7 +41,7 @@ argument-hint: "[msg \"메시지\"]"
    EOF
    )"
    ```
-6. 확인: `git log --oneline -3`, `git status --short`
+7. 확인: `git log --oneline -3`, `git status --short`, 현재 브랜치 이름
 
 ## 규칙
 - amend는 사용자가 요청할 때만, push되지 않은 커밋에만 한다.

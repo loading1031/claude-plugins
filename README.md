@@ -4,7 +4,7 @@ Claude Code 플러그인 마켓플레이스.
 
 | 플러그인 | 내용 | 명령 |
 |---|---|---|
-| `planning` | 기획을 한 주제씩 닫는 진행 방식 | `/planning:init`, `/planning:backlog`, `/planning:spec`, `/planning:commit` |
+| `planning` | 기획을 한 주제씩 닫는 진행 방식. 백로그 항목 하나 = 브랜치 하나 | `/planning:init`, `/planning:backlog`, `/planning:spec`, `/planning:commit`, `/planning:done` |
 | `kopring` | Kotlin + Spring Boot 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 | `/kopring:init`, 셸에서 `kopring-check` |
 
 ## 설치

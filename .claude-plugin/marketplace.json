@@ -6,7 +6,7 @@
     {
       "name": "planning",
       "source": "./plugins/planning",
-      "description": "기획을 한 주제씩 닫는 진행 방식 (backlog → spec → commit)"
+      "description": "기획을 한 주제씩 닫는 진행 방식 (backlog → spec → commit → done, 항목마다 브랜치)"
     },
     {
       "name": "kopring",
