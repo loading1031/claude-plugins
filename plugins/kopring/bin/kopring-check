@@ -1,0 +1,9 @@
+#!/bin/sh
+# Kotlin 컨벤션 검사를 파일 목록에 실행한다. 인자가 없으면 git이 추적하는 .kt 전체.
+# 사용: kopring-check [파일...]
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ "$#" -eq 0 ]; then
+  set -- $(git ls-files '*.kt')
+  [ "$#" -eq 0 ] && { echo "검사할 .kt 파일이 없습니다"; exit 0; }
+fi
+CLAUDE_PLUGIN_ROOT="$ROOT" exec python3 "$ROOT/scripts/check_kotlin_conventions.py" --files "$@"

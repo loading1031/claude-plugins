@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/check_kotlin_conventions.py\"",
+            "timeout": 10,
+            "statusMessage": "Kotlin 컨벤션 검사 중"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "loading1031-plugins",
+  "description": "loading1031의 Claude Code 플러그인 모음",
+  "owner": { "name": "loading1031" },
+  "plugins": [
+    {
+      "name": "planning",
+      "source": "./plugins/planning",
+      "description": "기획을 한 주제씩 닫는 진행 방식 (backlog → spec → commit)"
+    },
+    {
+      "name": "kopring",
+      "source": "./plugins/kopring",
+      "description": "Kotlin + Spring Boot 컨벤션 규칙과 .kt 편집 전 검사 훅 (Zed + Claude Code)"
+    }
+  ]
+}
