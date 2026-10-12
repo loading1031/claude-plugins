@@ -18,7 +18,7 @@ user-invocable: false
   - 헥사고날: `adapter.in → application.service → application.port.out ← adapter.out`, 모두 `→ domain`
 - `domain`: 순수 동기 Kotlin. `org.springframework.*`, `kotlinx.coroutines.*`, 바깥 계층을 import하지 않는다. JPA 애너테이션은 허용한다.
 - `application`: 유스케이스와 트랜잭션 경계. 동기 코드. 헥사고날에서는 `adapter`를 import하지 않고 `port/out` 인터페이스에만 의존한다.
-- Redis·Kafka·HTTP·JDBC 등 외부 기술 클라이언트는 `infrastructure`(계층형) 또는 `adapter/out`(헥사고날)과 `config`에서만 쓴다.
+- Redis·Kafka·HTTP·JDBC(`JdbcTemplate`, `JdbcClient` 등) 등 외부 기술 클라이언트는 `infrastructure`(계층형) 또는 `adapter/out`(헥사고날)과 `config`에서만 쓴다.
 - 이름: 포트 `<동사><대상>Port`(`LoadStockPort`), 어댑터 `<대상><기술>Adapter`(`StockPersistenceAdapter`), 읽기 전용 서비스 `<대상>QueryService`.
 - 새 기술(캐시, 시계열 DB, 외부 API, 브로커)을 추가할 때는 docs/architecture/의 해당 케이스 문서를 먼저 읽는다.
 

@@ -97,7 +97,7 @@ in 포트까지 두는 구조다. 이 컨벤션에서는 쓰지 않는다. 이�
 |---|---|---|
 | `domain`은 바깥 계층을 import하지 않는다 | 범용 | 훅 (`arch/domain-no-outer`), ArchUnit |
 | `application`은 `adapter`를 import하지 않는다 (헥사고날) | 범용 | 훅 (`arch/application-no-adapter`), ArchUnit |
-| Redis·Kafka·HTTP·JDBC 클라이언트는 `infrastructure`, `adapter/out`, `config`에서만 쓴다 | 범용 | 훅 (`arch/tech-client-outside-adapter`) |
+| Redis·Kafka·HTTP·JDBC(`JdbcTemplate`, `JdbcClient` 등) 클라이언트는 `infrastructure`, `adapter/out`, `config`에서만 쓴다 | 범용 | 훅 (`arch/tech-client-outside-adapter`) |
 | 전체 의존 방향 | 범용 | ArchUnit (템플릿 예정) |
 
 ## 6. Zed에서의 비용

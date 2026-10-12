@@ -44,7 +44,7 @@ MAX_BEANS_PER_CONFIG = 6
 TECH_CLIENT = re.compile(
     r"\b(?:RedisTemplate|StringRedisTemplate|ReactiveRedisTemplate|RedissonClient|"
     r"KafkaTemplate|RabbitTemplate|RestClient|RestTemplate|WebClient|"
-    r"JdbcTemplate|NamedParameterJdbcTemplate|EntityManager|MongoTemplate|"
+    r"JdbcTemplate|NamedParameterJdbcTemplate|JdbcClient|EntityManager|MongoTemplate|"
     r"ElasticsearchOperations|InfluxDBClient)\b"
 )
 TECH_CLIENT_ALLOWED = ("/infrastructure/", "/adapter/out/", "/config/")
@@ -58,6 +58,115 @@ EVENT_LISTENER = re.compile(
     re.S,
 )
 NON_SPECIFIC_EVENT_TYPES = {"Any", "Object", "ApplicationEvent", "PayloadApplicationEvent"}
+
+
+# 현재 시각을 시스템 시계에서 바로 읽는 호출
+NOW_CALL = re.compile(
+    r"\b(?:Instant|LocalDateTime|LocalDate|LocalTime|ZonedDateTime|OffsetDateTime|OffsetTime|"
+    r"Year|YearMonth|MonthDay)\.now\("
+)
+
+
+def _call_args(text: str, start: int) -> str:
+    depth = 0
+    for i, ch in enumerate(text[start:], start):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            if depth == 0:
+                return text[start:i]
+            depth -= 1
+    return text[start:]
+
+
+# now()와 now(zone)은 시스템 시계를 읽는다. now(clock)처럼 다른 인자를 넘기면 통과
+def _now_without_clock(line: str) -> bool:
+    for m in NOW_CALL.finditer(line):
+        args = _call_args(line, m.end()).strip()
+        if not args or re.search(r"Zone|zone", args):
+            return True
+    return False
+
+
+# 괄호 안의 최상위 인자 개수. 문자열 안의 쉼표는 세지 않는다(줄 단위 근사)
+def _arg_count(text: str, start: int) -> int:
+    depth, count, in_str, seen = 0, 1, False, False
+    for ch in text[start:]:
+        if in_str:
+            in_str = ch != '"'
+            continue
+        if ch == '"':
+            in_str, seen = True, True
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            if depth == 0:
+                return count if seen else 0
+            depth -= 1
+        elif ch == "," and depth == 0:
+            count += 1
+        elif not ch.isspace():
+            seen = True
+    return count
+
+
+# 나눗셈·자릿수 조정에서 반올림 방식을 정하지 않은 호출
+SCALE_CALL = re.compile(r"\.(divide|setScale)\(")
+
+
+def _missing_rounding(line: str) -> bool:
+    if "RoundingMode" in line or "MathContext" in line:
+        return False
+    return any(_arg_count(line, m.end()) == 1 for m in SCALE_CALL.finditer(line))
+
+
+# Double 값을 BigDecimal 생성자에 넘기는 것. 문자열 생성자나 toBigDecimal()을 쓴다
+DOUBLE_CTOR = re.compile(
+    r"\bBigDecimal\(\s*(?:-?\d+\.\d*(?:[eE][-+]?\d+)?[fFdD]?|-?\d+(?:[eE][-+]?\d+)?[fFdD]|[^()\"]*\.toDouble\(\)|[^()\"]*\.toFloat\(\))\s*\)"
+)
+
+# 로그 호출. 문자열 리터럴은 빼고, 문자열 템플릿($x, ${...})과 인자만 본다
+LOG_CALL = re.compile(r"\b(?:log|logger|LOG|LOGGER)\.(?:trace|debug|info|warn|error)\s*[({]")
+SECRET_NAME = re.compile(
+    r"\b(?:app_?key|app_?secret|client_?secret|secret_?key|api_?key|access_?token|refresh_?token|"
+    r"password|passwd|secret)\b",
+    re.I,
+)
+
+
+def _code_and_templates(line: str) -> str:
+    out, i, in_str = [], 0, False
+    while i < len(line):
+        ch = line[i]
+        if in_str:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == '"':
+                in_str = False
+            elif ch == "$" and i + 1 < len(line) and line[i + 1] == "{":
+                end = line.find("}", i)
+                end = len(line) if end < 0 else end
+                out.append(" " + line[i + 2 : end] + " ")
+                i = end + 1
+                continue
+            elif ch == "$":
+                m = re.match(r"\$(\w+)", line[i:])
+                if m:
+                    out.append(" " + m.group(1) + " ")
+                    i += len(m.group(0))
+                    continue
+        elif ch == '"':
+            in_str = True
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+def _logs_secret(line: str) -> bool:
+    m = LOG_CALL.search(line)
+    return bool(m) and bool(SECRET_NAME.search(_code_and_templates(line[m.end() :])))
 
 
 # (id, 설명, 매칭 함수, main 소스에만 적용 여부, 경로 조건)
@@ -196,6 +305,34 @@ RULES = [
         lambda line: re.search(r"\bDispatchers\.(?:IO|Default|Unconfined)\b", line),
         True,
         lambda path: "/config/" not in path,
+    ),
+    (
+        "time/inject-clock",
+        "현재 시각을 시스템 시계에서 바로 읽지 않는다 → 주입받은 Clock으로 Instant.now(clock)",
+        _now_without_clock,
+        True,
+        lambda path: "/config/" not in path,
+    ),
+    (
+        "bigdecimal/rounding-mode",
+        "divide/setScale에 반올림 방식을 정한다 → divide(x, scale, RoundingMode.DOWN), setScale(n, RoundingMode.HALF_UP)",
+        _missing_rounding,
+        True,
+        None,
+    ),
+    (
+        "bigdecimal/no-double-ctor",
+        "BigDecimal(Double) 금지(0.1이 0.1000000000000000055…가 된다) → BigDecimal(\"0.1\") 또는 \"0.1\".toBigDecimal()",
+        lambda line: DOUBLE_CTOR.search(line),
+        False,
+        None,
+    ),
+    (
+        "log/no-secret",
+        "비밀번호·키·토큰을 로그에 남기지 않는다 → 마스킹하거나 식별자만 남긴다",
+        _logs_secret,
+        True,
+        None,
     ),
 ]
 

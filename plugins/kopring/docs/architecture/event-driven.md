@@ -52,7 +52,7 @@ IntelliJ Ultimate는 `publishEvent(...)` 옆에 리스너로 가는 아이콘을
 data class StockAllocated(val eventId: UUID, val sku: String, val quantity: Int, val occurredAt: Instant)
 
 // application/service — 발행
-publisher.publishEvent(StockAllocated(UUID.randomUUID(), sku, qty, Instant.now()))
+publisher.publishEvent(StockAllocated(UUID.randomUUID(), sku, qty, Instant.now(clock)))  // clock: 주입받은 Clock
 
 // adapter/in/messaging — 수신. 파라미터 타입이 StockAllocated라서 사용처 찾기에 잡힌다
 @Component

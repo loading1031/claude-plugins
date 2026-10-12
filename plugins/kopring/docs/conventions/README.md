@@ -41,6 +41,7 @@ git config core.hooksPath .githooks
 | [테스트](testing.md) | 빈 연결 오류 사전 검사 불가, 디버거 없음 |
 | [코루틴](coroutines.md) | 코루틴 디버거 없음 |
 | [Kotlin + Spring 기본](kotlin-spring.md) | Kotlin `final` 기본값과 Spring·JPA 충돌 |
+| [값: 시각·소수·비밀](values.md) | 타입으로 드러나지 않는 시각·소수·비밀값 실수 |
 
 ## 검사 규칙 색인
 
@@ -61,7 +62,7 @@ git config core.hooksPath .githooks
 | `domain/no-coroutines` | 팀 | `domain`에서 `suspend`, 코루틴 금지 | [코루틴](coroutines.md) |
 | `arch/domain-no-outer` | 범용 | `domain`이 바깥 계층 import 금지 | [아키텍처 선택](../architecture/choosing.md) |
 | `arch/application-no-adapter` | 범용 | `application`이 `adapter` import 금지 (헥사고날) | [아키텍처 선택](../architecture/choosing.md) |
-| `arch/tech-client-outside-adapter` | 범용 | Redis·Kafka·HTTP·JDBC 클라이언트는 어댑터와 `config`에서만 | [아키텍처 선택](../architecture/choosing.md) |
+| `arch/tech-client-outside-adapter` | 범용 | Redis·Kafka·HTTP·JDBC(`JdbcTemplate`, `JdbcClient` 등) 클라이언트는 어댑터와 `config`에서만 | [아키텍처 선택](../architecture/choosing.md) |
 | `cache/name-constant` | 팀 | 캐시 이름 문자열 직접 사용 금지 | [캐시](../architecture/cache.md) |
 | `event/listener-concrete-type` | Zed | 리스너는 구체 이벤트 타입 하나만 받음 | [이벤트 드리븐](../architecture/event-driven.md) |
 | `event/topic-constant` | 범용 | 토픽·큐 이름 문자열 직접 사용 금지 | [이벤트 드리븐](../architecture/event-driven.md) |
@@ -70,6 +71,10 @@ git config core.hooksPath .githooks
 | `coroutine/name-required` | 범용 | `launch/async`에 `CoroutineName` 필수 | [코루틴](coroutines.md) |
 | `coroutine/inject-dispatcher` | 범용 | `config` 밖에서 `Dispatchers.IO/Default` 금지 | [코루틴](coroutines.md) |
 | `coroutine/no-suspend-transactional` | 범용 | `@Transactional` 파일에 `suspend fun` 금지 | [코루틴](coroutines.md) |
+| `time/inject-clock` | 범용 | `Instant.now()`, `now(zone)` 금지 → 주입한 `Clock` (테스트·`config` 제외) | [값](values.md) |
+| `bigdecimal/rounding-mode` | 범용 | `divide`, `setScale`에 `RoundingMode`/`MathContext` 필수 | [값](values.md) |
+| `bigdecimal/no-double-ctor` | 범용 | `BigDecimal(0.1)`처럼 `Double`로 생성 금지 | [값](values.md) |
+| `log/no-secret` | 범용 | 로그 호출에 비밀번호·키·토큰 금지 | [값](values.md) |
 
 ## 검사 스크립트의 한계
 
@@ -78,5 +83,6 @@ git config core.hooksPath .githooks
 - 여러 줄에 걸친 `launch(` 인자의 `CoroutineName` 여부 (첫 줄만 본다)
 - suspend 호출을 감싼 `runCatching` → detekt `SuspendFunSwallowedCancellation`
 - 계층 간 의존 방향 전체 → ArchUnit (검사 스크립트는 import 몇 가지만 본다)
+- Kotlin `BigDecimal` 나눗셈 연산자 `a / b`와 변수 타입이 `Double`인 `BigDecimal(x)` → [값](values.md)의 "검사가 못 잡는 것"
 - 구현체가 여러 개인 인터페이스의 `@Component` 자동 등록, 상태를 가진 `object`, 컨트롤러 경로 규칙 → 리뷰
 - 패키지 이름이 이 컨벤션(`domain`, `application`, `adapter`, `infrastructure`, `api`, `config`)과 다르면 경로 기반 규칙이 동작하지 않는다.
