@@ -51,7 +51,7 @@ TECH_CLIENT_ALLOWED = ("/infrastructure/", "/adapter/out/", "/config/")
 
 # 리스너가 구체 이벤트 타입을 받는지. 상위 타입이나 classes= 지정은 사용처 찾기로 추적이 안 된다
 EVENT_LISTENER = re.compile(
-    r"@(?:Transactional)?EventListener\b(\([^)]*\))?"
+    r"@(?:(?:Transactional)?EventListener|ApplicationModuleListener)\b(\([^)]*\))?"
     r"(?:\s*@\w+(?:\([^)]*\))?)*"
     r"\s*(?:(?:public|internal|private|protected|suspend|open|override)\s+)*"
     r"fun\s+\w+\s*\(\s*(?:\w+\s*:\s*([\w.]+))?",
@@ -337,12 +337,92 @@ RULES = [
 ]
 
 
+# 프로젝트 CLAUDE.md "## 컨벤션" 절의 선언. 기술 이름 → 그 기술을 쓰는 import 접두어
+TECH_IMPORTS = {
+    "redis": ("org.springframework.data.redis", "org.redisson", "io.lettuce", "redis.clients"),
+    "kafka": ("org.springframework.kafka", "org.apache.kafka"),
+    "rabbitmq": ("org.springframework.amqp", "com.rabbitmq"),
+    "r2dbc": ("org.springframework.r2dbc", "org.springframework.data.r2dbc", "io.r2dbc"),
+    "mongodb": ("org.springframework.data.mongodb", "com.mongodb"),
+    "elasticsearch": ("org.springframework.data.elasticsearch", "co.elastic"),
+    "webflux": ("org.springframework.web.reactive",),
+}
+_project_cache: dict[str, dict] = {}
+
+
+def project_conventions(path: str) -> dict:
+    """파일에서 위로 올라가며 "## 컨벤션" 절이 있는 CLAUDE.md를 찾아 선언을 읽는다.
+
+    - 쓰지 않는 기술: Redis, Kafka, R2DBC   → 그 기술의 import 금지
+    - 클라이언트 위치: JdbcClient → adapter/out/timeseries, …   → 그 클라이언트는 그 경로에서만
+    """
+    d = Path(path).resolve().parent
+    for cand in [d, *d.parents]:
+        key = str(cand)
+        if key in _project_cache:
+            return _project_cache[key]
+        claude = cand / "CLAUDE.md"
+        if claude.is_file():
+            text = claude.read_text(encoding="utf-8", errors="ignore")
+            m = re.search(r"^## 컨벤션\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+            if m:
+                conf = _parse_conventions(m.group(1))
+                _project_cache[key] = conf
+                return conf
+        if (cand / ".git").exists():
+            break
+    return {"forbidden": {}, "locations": {}}
+
+
+def _setting(body: str, key: str) -> str:
+    m = re.search(rf"^- {key}:\s*(.+)$", body, re.M)
+    v = m.group(1).split("<!--")[0].strip() if m else ""
+    return "" if v in ("", "없음") else v
+
+
+def _parse_conventions(body: str) -> dict:
+    forbidden = {}
+    for name in re.split(r"[,、]", _setting(body, "쓰지 않는 기술")):
+        name = name.strip().strip("`").lower()
+        if name in TECH_IMPORTS:
+            forbidden[name] = TECH_IMPORTS[name]
+    locations = {}
+    for item in re.split(r",(?![^()]*\))", _setting(body, "클라이언트 위치")):
+        m = re.match(r"\s*`?(\w+)`?\s*(?:→|->|=|:)\s*`?([\w/.-]+?)`?\s*$", item)
+        if m:
+            locations.setdefault(m.group(1), []).append("/" + m.group(2).strip("/") + "/")
+    return {"forbidden": forbidden, "locations": locations}
+
+
+def _project_violations(path: str, lines: list[str], is_test: bool) -> list[tuple[str, str, int, str]]:
+    conf = project_conventions(path)
+    found = []
+    for no, line in enumerate(lines, 1):
+        imp = re.match(r"\s*import\s+([\w.]+)", line)
+        if imp:
+            for tech, prefixes in conf["forbidden"].items():
+                if imp.group(1).startswith(prefixes):
+                    found.append((
+                        "project/forbidden-tech",
+                        f"이 프로젝트는 {tech}를 쓰지 않는다(CLAUDE.md \"컨벤션\"의 \"쓰지 않는 기술\") → 선언을 바꾸려면 사용자에게 먼저 묻는다",
+                        no, line.strip()))
+        if is_test or line.lstrip().startswith(("//", "import ")):
+            continue
+        for client, dirs in conf["locations"].items():
+            if re.search(rf"\b{re.escape(client)}\b", line) and not any(d in path for d in dirs) and "/config/" not in path:
+                found.append((
+                    "project/client-location",
+                    f"{client}는 {', '.join(d.strip('/') for d in dirs)}에서만 쓴다(CLAUDE.md \"컨벤션\"의 \"클라이언트 위치\")",
+                    no, line.strip()))
+    return found
+
+
 def find_violations(path: str, content: str) -> list[tuple[str, str, int, str]]:
     if not path.endswith(".kt"):
         return []
     is_test = "/src/test/" in path
-    found = []
     lines = content.splitlines()
+    found = _project_violations(path, lines, is_test)
     for no, line in enumerate(lines, 1):
         if line.lstrip().startswith("//"):
             continue
@@ -435,6 +515,20 @@ def _format(path: str, violations) -> str:
     return "\n".join(out)
 
 
+def _stale_copy_warning(path: str) -> None:
+    """저장소에 복사한 pre-commit 검사기가 플러그인 것과 다르면 사용자에게 알린다(막지는 않는다)."""
+    d = Path(path).resolve().parent
+    for cand in [d, *d.parents]:
+        copy = cand / "scripts" / "conventions" / "check_kotlin_conventions.py"
+        if copy.is_file():
+            if copy.read_bytes() != Path(__file__).read_bytes():
+                print(json.dumps({"systemMessage": "kopring: 저장소의 scripts/conventions/check_kotlin_conventions.py가 플러그인 검사기와 다르다. "
+                                  "git pre-commit 규칙이 어긋나 있으니 /kopring:init을 다시 실행해 맞춘다."}, ensure_ascii=False))
+            return
+        if (cand / ".git").exists():
+            return
+
+
 def run_hook() -> int:
     payload = json.load(sys.stdin)
     tool = payload.get("tool_name", "")
@@ -459,6 +553,7 @@ def run_hook() -> int:
     if new_violations:
         print(_format(path, new_violations), file=sys.stderr)
         return 2
+    _stale_copy_warning(path)
     return 0
 
 

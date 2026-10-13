@@ -1,6 +1,6 @@
 ---
 name: event-driven
-description: 내부 이벤트와 메시지 브로커 규칙(과거형 이벤트, 구체 타입 리스너, AFTER_COMMIT, Outbox, 멱등 소비). 이벤트·Kafka를 다룰 때 사용
+description: 내부 이벤트와 메시지 브로커 규칙(과거형 이벤트, 구체 타입 리스너, AFTER_COMMIT, Modulith 발행 기록·Outbox, 멱등 소비). 이벤트·Kafka를 다룰 때 사용
 paths: "**/*.kt"
 user-invocable: false
 ---
@@ -17,9 +17,12 @@ user-invocable: false
 - 리스너는 구체 이벤트 클래스 하나를 파라미터로 받는다. `Any`, `ApplicationEvent`, 상위 타입, `@EventListener(classes = [...])`를 쓰지 않는다.
 - 리스너는 `adapter/in/messaging`(계층형: `api`)에 두고 변환과 서비스 호출만 한다.
 - 부수 효과는 `@TransactionalEventListener(phase = AFTER_COMMIT)`로 처리한다. 그 안에서 DB에 쓰면 `REQUIRES_NEW`를 붙인다.
-- 유실되면 안 되는 이벤트는 Outbox를 쓴다. 사용자에게 Outbox 도입 여부를 먼저 확인한다.
+- 유실되면 안 되는 이벤트는 발행 기록을 남긴다: Spring Modulith 이벤트 발행 기록(`event_publication`) 또는 직접 만든 Outbox. 프로젝트 CLAUDE.md에 정한 것이 없으면 사용자에게 먼저 묻는다.
+- Spring Modulith를 쓰면 모듈 사이 리스너는 `@ApplicationModuleListener`(= 커밋 후 + 비동기 + `REQUIRES_NEW`)로 쓰고, 같은 구체 타입 규칙을 지킨다.
 
 ## 메시지 브로커
+
+프로젝트 CLAUDE.md "컨벤션"의 "쓰지 않는 기술"에 Kafka·RabbitMQ가 있으면 이 절은 적용하지 않는다.
 
 - 토픽·큐 이름은 `Topics` 상수로만 쓴다.
 - 발행은 out 포트(`PublishStockEventPort`) 뒤에 두고 `adapter/out/messaging`에서 `KafkaTemplate`으로 구현한다.

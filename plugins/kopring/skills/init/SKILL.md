@@ -16,7 +16,7 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 �
 
 ### 1. 구조 확인
 - 인자로 `hexagonal`(out 포트 헥사고날) 또는 `layered`(계층형)를 받는다. 없으면 `${CLAUDE_SKILL_DIR}/../../docs/architecture/choosing.md`의 기준을 요약해 보여 주고 사용자에게 묻는다.
-- 사용하는 케이스(Redis 캐시, 시계열 DB, 외부 API, Kafka 등)와 기본 패키지를 묻는다. 이미 CLAUDE.md에 적혀 있으면 묻지 않는다.
+- 사용하는 케이스(Redis 캐시, 시계열 DB, 외부 API, Kafka 등), **쓰지 않기로 한 기술**, 특정 경로에만 둘 클라이언트(명시적 예외), 기본 패키지를 묻는다. 이미 CLAUDE.md에 적혀 있으면("결정된 사항" 등) 거기서 옮기고 묻지 않는다.
 
 ### 2. CLAUDE.md
 프로젝트 루트 `CLAUDE.md`에 아래 절이 없으면 추가하고, 있으면 값만 맞춘다. 다른 내용은 건드리지 않는다.
@@ -28,6 +28,8 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 �
 - 사용하는 케이스: <예: 시계열 DB, 외부 API>
 - 기본 패키지: <com.example.app>
 - 명시적 예외: <없으면 "없음". 예: adapter/out/timeseries에서만 JdbcClient + SQL 허용>
+- 쓰지 않는 기술: <없으면 "없음". 예: Redis, Kafka, R2DBC>   <!-- 훅 project/forbidden-tech -->
+- 클라이언트 위치: <없으면 "없음". 예: JdbcClient → adapter/out/timeseries>   <!-- 훅 project/client-location -->
 ```
 
 ### 3. pre-commit 훅
@@ -42,7 +44,7 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 �
    exec python3 "$(git rev-parse --show-toplevel)/scripts/conventions/check_kotlin_conventions.py" --files $files
    ```
 3. git 저장소면 `git config core.hooksPath .githooks`를 실행한다. 이미 다른 hooksPath가 설정돼 있으면 바꾸지 말고 사용자에게 알린다.
-4. 플러그인을 업데이트한 뒤에는 이 명령을 다시 실행해 복사본을 맞추라고 안내한다.
+4. 플러그인을 업데이트한 뒤에는 이 명령을 다시 실행해 복사본을 맞추라고 안내한다. 복사본이 플러그인 검사기와 다르면 Claude 훅이 편집 때마다 경고한다.
 
 ### 4. 확인
 - `python3 --version`이 3.10 이상인지 확인한다.

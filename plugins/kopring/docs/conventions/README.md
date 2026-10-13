@@ -11,6 +11,7 @@ Zed + Kotlin LSP 환경에는 IntelliJ Ultimate의 Spring 전용 분석·탐색 
 | **범용** | IDE와 무관하게 권장되는 모범 사례 | 유지 |
 | **팀** | 합리적이지만 팀이 정한 선택 | 팀이 다시 결정 |
 | **Zed** | Zed의 공백을 메우려는 보정. IntelliJ에서는 과한 제약 | 풀어도 됨 |
+| **프로젝트** | 프로젝트 `CLAUDE.md` "컨벤션" 절에 선언한 값(쓰지 않는 기술, 클라이언트 위치)으로 동작 | 선언을 고침 |
 
 ## 강제 수단
 
@@ -64,7 +65,7 @@ git config core.hooksPath .githooks
 | `arch/application-no-adapter` | 범용 | `application`이 `adapter` import 금지 (헥사고날) | [아키텍처 선택](../architecture/choosing.md) |
 | `arch/tech-client-outside-adapter` | 범용 | Redis·Kafka·HTTP·JDBC(`JdbcTemplate`, `JdbcClient` 등) 클라이언트는 어댑터와 `config`에서만 | [아키텍처 선택](../architecture/choosing.md) |
 | `cache/name-constant` | 팀 | 캐시 이름 문자열 직접 사용 금지 | [캐시](../architecture/cache.md) |
-| `event/listener-concrete-type` | Zed | 리스너는 구체 이벤트 타입 하나만 받음 | [이벤트 드리븐](../architecture/event-driven.md) |
+| `event/listener-concrete-type` | Zed | 리스너는 구체 이벤트 타입 하나만 받음 (`@EventListener`, `@TransactionalEventListener`, `@ApplicationModuleListener`) | [이벤트 드리븐](../architecture/event-driven.md) |
 | `event/topic-constant` | 범용 | 토픽·큐 이름 문자열 직접 사용 금지 | [이벤트 드리븐](../architecture/event-driven.md) |
 | `coroutine/no-global-scope` | 범용 | `GlobalScope` 금지 | [코루틴](coroutines.md) |
 | `coroutine/no-run-blocking` | 범용 | 메인 코드에서 `runBlocking` 금지 | [코루틴](coroutines.md) |
@@ -75,6 +76,8 @@ git config core.hooksPath .githooks
 | `bigdecimal/rounding-mode` | 범용 | `divide`, `setScale`에 `RoundingMode`/`MathContext` 필수 | [값](values.md) |
 | `bigdecimal/no-double-ctor` | 범용 | `BigDecimal(0.1)`처럼 `Double`로 생성 금지 | [값](values.md) |
 | `log/no-secret` | 범용 | 로그 호출에 비밀번호·키·토큰 금지 | [값](values.md) |
+| `project/forbidden-tech` | 프로젝트 | 프로젝트 `CLAUDE.md` "컨벤션"의 "쓰지 않는 기술"(Redis, Kafka, RabbitMQ, R2DBC, MongoDB, Elasticsearch, WebFlux) import 금지 | `/kopring:init` |
+| `project/client-location` | 프로젝트 | "클라이언트 위치"에 적은 클라이언트는 그 경로(와 `config`)에서만 (테스트 제외) | `/kopring:init` |
 
 ## 검사 스크립트의 한계
 

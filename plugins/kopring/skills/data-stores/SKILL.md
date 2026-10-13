@@ -19,6 +19,8 @@ user-invocable: false
 
 ## 읽기·쓰기 분리
 
+프로젝트가 Replica나 CQRS를 "사용하는 케이스"로 선언하지 않았으면 이 절은 적용하지 않는다.
+
 - Replica 라우팅은 `config`에서만 처리하고 포트를 만들지 않는다. 라우팅 DataSource는 `LazyConnectionDataSourceProxy`로 감싼다.
 - 읽기 전용 서비스는 `*QueryService`로 이름 짓고 클래스에 `@Transactional(readOnly = true)`를 붙인다. 쓰기 메서드만 `@Transactional`로 덮어쓴다.
 - 방금 쓴 데이터를 바로 읽어야 하면 쓰기 트랜잭션 안에서 읽는다(복제 지연).
