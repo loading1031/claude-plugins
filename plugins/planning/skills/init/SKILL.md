@@ -16,6 +16,7 @@ argument-hint: "[기획 폴더 경로]"
    - 시각화 문서 URL (없으면 "없음")
    - 용어 (정해 둔 용어, 쓰지 않을 말. 없으면 "없음")
    - 기본 브랜치 (보통 `main`. `git symbolic-ref --short HEAD`나 기존 브랜치로 확인)
+   - 작업지시서를 둘 곳 (원격이 GitHub이면 `issue`, 아니면 `file`)
    - 동기화 표 (프로젝트 고유의 "무엇이 바뀌면 어디를 함께 고치나". 없으면 플러그인 기본 표를 씀)
 3. `CLAUDE.md`에 절을 추가한다. 다른 내용은 건드리지 않는다.
 
@@ -30,6 +31,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit)
 - 기본 브랜치: main
 - 기획 브랜치: plan/<ID>-<slug>
 - 합치기 방식: PR (원격이 GitHub이 아니면 local)
+- 작업지시서: issue (원격이 GitHub이 아니면 file)
 
 ### 동기화 표
 | 바뀐 것 | 함께 고칠 곳 |
