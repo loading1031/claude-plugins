@@ -22,8 +22,6 @@ user-invocable: false
 
 ## 메시지 브로커
 
-프로젝트 CLAUDE.md "컨벤션"의 "쓰지 않는 기술"에 Kafka·RabbitMQ가 있으면 이 절은 적용하지 않는다.
-
 - 토픽·큐 이름은 `Topics` 상수로만 쓴다.
 - 발행은 out 포트(`PublishStockEventPort`) 뒤에 두고 `adapter/out/messaging`에서 `KafkaTemplate`으로 구현한다.
 - 메시지 클래스는 `<이벤트>Message`로 이벤트와 1:1 대응시킨다.

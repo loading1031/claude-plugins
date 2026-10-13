@@ -7,8 +7,6 @@ user-invocable: false
 
 # 캐시
 
-프로젝트 CLAUDE.md "컨벤션"의 "쓰지 않는 기술"에 Redis가 있으면 Redis 관련 항목(`RedisTemplate`, 분산 락, 캐시 포트)은 적용하지 않는다. `@Cacheable` 규칙은 사용하는 케이스에 캐시가 있을 때만 적용한다.
-
 근거: ${CLAUDE_SKILL_DIR}/../../docs/architecture/cache.md
 
 - 단순 조회 캐시는 `@Cacheable`로 한다. 이 경우 포트를 만들지 않는다.
