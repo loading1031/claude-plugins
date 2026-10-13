@@ -29,6 +29,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit)
 - 용어: 없음
 - 기본 브랜치: main
 - 기획 브랜치: plan/<ID>-<slug>
+- 합치기 방식: PR (원격이 GitHub이 아니면 local)
 
 ### 동기화 표
 | 바뀐 것 | 함께 고칠 곳 |
