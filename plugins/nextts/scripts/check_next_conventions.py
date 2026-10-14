@@ -114,6 +114,50 @@ def tailwind_major(root: Path) -> int:
     return int(m.group()) if m else 4
 
 
+def server_base(root: Path) -> Path | None:
+    """server/ 폴더가 있는 기준 폴더(Next 루트 또는 src/). 없으면 None(구조 검사 끔)."""
+    for base in (root / "src", root):
+        if (base / "server").is_dir():
+            return base
+    return None
+
+
+PROCESS_ENV = re.compile(r"\bprocess\.env\b")
+ENV_NAME = re.compile(r"\bprocess\.env\.(\w+)|\bprocess\.env\[\s*['\"`](\w+)")
+SERVER_ONLY_IMPORT = re.compile(r"^\s*import\s+['\"]server-only['\"]", re.M)
+# 빌드·서버 시작 때 서버에서만 실행되는 설정 파일은 process.env를 직접 읽어도 된다
+ENV_CONFIG_FILE = re.compile(r"^(?:next\.config|instrumentation|proxy|middleware)\.(?:ts|mts)$|\.config\.(?:ts|mts)$")
+
+
+def _structure_violations(path: str, root: Path, lines: list[str], content: str) -> list[tuple[str, str, int, str]]:
+    base = server_base(root)
+    if base is None:
+        return []
+    found = []
+    p = Path(path).resolve()
+    rel = p.relative_to(base).as_posix() if p.is_relative_to(base) else ""
+    name = p.name
+    if rel.startswith("server/") and not name.endswith(".d.ts") and not SERVER_ONLY_IMPORT.search(content):
+        found.append(("arch/server-only-marker", "server/의 파일은 맨 위에 import \"server-only\" → 클라이언트에서 import하면 빌드 오류가 나게 한다",
+                      1, name))
+    if ENV_CONFIG_FILE.search(name) or rel == "server/env.ts":
+        return found
+    is_public_env = rel == "lib/public-env.ts"
+    for no, line in enumerate(lines, 1):
+        if _is_comment(line) or not PROCESS_ENV.search(line):
+            continue
+        if is_public_env:
+            names = [a or b for a, b in ENV_NAME.findall(line)]
+            if names and all(n.startswith("NEXT_PUBLIC_") for n in names):
+                continue
+            found.append(("arch/env-via-module", "lib/public-env.ts는 NEXT_PUBLIC_ 변수만 이름 그대로 읽는다(process.env.NEXT_PUBLIC_X) → 서버 전용 값은 server/env.ts",
+                          no, line.strip()))
+            continue
+        found.append(("arch/env-via-module", "process.env를 직접 읽지 않는다 → 서버 전용 값은 server/env.ts의 env, 공개값(NEXT_PUBLIC_)은 lib/public-env.ts의 publicEnv를 import",
+                      no, line.strip()))
+    return found
+
+
 def ui_dir(root: Path) -> str | None:
     """components.json(shadcn)의 aliases.ui에서 UI 컴포넌트 폴더를 읽는다. 파일이 없으면 None(재사용 검사 끔)."""
     f = root / "components.json"
@@ -240,6 +284,8 @@ def find_violations(path: str, content: str) -> list[tuple[str, str, int, str]]:
         return found
 
     is_client = not is_env and bool(USE_CLIENT.match(content))
+    # server/가 있으면 클라이언트의 백엔드 주소 읽기는 arch/env-via-module이 더 넓게 막는다(메시지 중복 방지)
+    has_server_dir = server_base(root) is not None
     env = conf["backend_env"]
     public_backend = re.compile(rf"\bNEXT_PUBLIC_\w*{re.escape(env)}\b") if env else None
     for no, line in enumerate(lines, 1):
@@ -251,7 +297,7 @@ def find_violations(path: str, content: str) -> list[tuple[str, str, int, str]]:
         if public_backend and public_backend.search(line):
             add("project/backend-server-only", f"백엔드 주소({env})를 브라우저에 내보내지 않는다(CLAUDE.md \"프론트엔드 컨벤션\"의 \"백엔드 호출: 서버만\") → 서버 컴포넌트·라우트 핸들러·서버 액션에서 호출",
                 no, line.strip())
-        elif is_client and env and re.search(rf"\b{re.escape(env)}\b", line):
+        elif is_client and env and not has_server_dir and re.search(rf"\b{re.escape(env)}\b", line):
             add("project/backend-server-only", f"클라이언트 컴포넌트에서 백엔드({env})를 부르지 않는다 → 서버 컴포넌트·라우트 핸들러·서버 액션에서 호출하고 결과를 props로 넘긴다",
                 no, line.strip())
         for lib in conf["forbidden_libs"]:
@@ -264,6 +310,7 @@ def find_violations(path: str, content: str) -> list[tuple[str, str, int, str]]:
             add("memo/no-manual-memo", "useMemo·useCallback·memo를 쓰지 않는다(React Compiler가 맡는다) → 컴파일러가 잘못 최적화할 때만 \"use no memo\"와 이유 주석",
                 no, line)
     if not is_env:
+        found.extend(_structure_violations(path, root, lines, content))
         found.extend(_ui_violations(path, root, tw, name.endswith(".tsx"), lines, content))
     return found
 

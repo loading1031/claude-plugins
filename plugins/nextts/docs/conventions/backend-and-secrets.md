@@ -19,7 +19,7 @@ Next 서버를 BFF(Backend For Frontend)로 두는 프로젝트의 선언이다.
 
 - 백엔드는 서버 컴포넌트, 라우트 핸들러, 서버 액션에서만 부른다. 브라우저는 Next하고만 통신한다.
 - 클라이언트 컴포넌트가 데이터를 바꿔야 하면 서버 액션이나 라우트 핸들러를 거친다. 실시간 데이터도 라우트 핸들러가 중계한다.
-- 검사: 백엔드 주소 환경변수에 `NEXT_PUBLIC_`을 붙이거나(`NEXT_PUBLIC_BACKEND_URL`), `"use client"` 파일에서 그 이름을 읽으면 막는다.
+- 검사: 백엔드 주소 환경변수에 `NEXT_PUBLIC_`을 붙이거나(`NEXT_PUBLIC_BACKEND_URL`), `"use client"` 파일에서 그 이름을 읽으면 막는다. `server/` 폴더가 있으면 두 번째 검사는 `arch/env-via-module`이 더 넓게 대신한다([구조와 환경변수](architecture.md)).
 
 ## 쓰지 않는 라이브러리 (프로젝트, `project/forbidden-lib`)
 
