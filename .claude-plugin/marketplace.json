@@ -17,6 +17,11 @@
       "name": "nextts",
       "source": "./plugins/nextts",
       "description": "Next.js + TypeScript 컨벤션 규칙과 편집 전 검사 훅 (Next 16+ App Router, TypeScript만)"
+    },
+    {
+      "name": "design",
+      "source": "./plugins/design",
+      "description": "디자인 문서(Claude 아티팩트) 작업 방식: 탭 구성, 화면 구현 전 읽기, rev·pub 기준 기록"
     }
   ]
 }

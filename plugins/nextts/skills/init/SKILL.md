@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # /nextts:init — 프로젝트에 컨벤션 적용
 
-Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 프로젝트 위치(`next`를 의존성에 둔 `package.json`)와 React Compiler 사용 여부(`next.config.*`)는 검사기가 알아서 찾는다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
+Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 프로젝트 위치(`next`를 의존성에 둔 `package.json`), React Compiler 사용 여부(`next.config.*`), Tailwind 버전(`tailwindcss`), UI 컴포넌트 폴더(`components.json`)는 검사기가 알아서 찾는다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
 
 ## 절차
 
@@ -27,17 +27,17 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 
 ```
 
 ### 3. JavaScript 파일 옮기기
-- Next 프로젝트 안의 `.js`·`.jsx`·`.mjs`·`.cjs`(`public/`, `node_modules/`, `.next/` 제외)를 찾아 보여 주고, `.ts`로 옮길지 묻는다. create-next-app이 만든 `postcss.config.mjs`, `eslint.config.mjs`가 보통 여기에 해당한다.
+- Next 프로젝트 안의 `.js`·`.jsx`·`.mjs`·`.cjs`(`public/`, `node_modules/`, `.next/` 제외)를 찾아 보여 주고, `.ts`로 옮길지 묻는다. Tailwind v4 프로젝트에 `tailwind.config.*`가 있으면 `@theme`으로 옮길지 묻는다. create-next-app이 만든 `postcss.config.mjs`, `eslint.config.mjs`가 보통 여기에 해당한다.
 - `eslint.config.ts`로 옮기면 개발 의존성 `jiti`(2.2.0 이상)를 lockfile의 패키지 매니저로 추가한다.
 - `tsconfig.json`의 `allowJs`를 `false`로 바꾼다.
 - 근거: `${CLAUDE_SKILL_DIR}/../../docs/conventions/typescript.md`
 
 ### 4. pre-commit 훅
 1. `${CLAUDE_PLUGIN_ROOT}/scripts/check_next_conventions.py`를 저장소의 `scripts/conventions/check_next_conventions.py`로 복사한다. 이미 있고 내용이 다르면 차이를 보여 주고 덮어쓸지 묻는다.
-2. `.githooks/pre-commit`이 없으면 `#!/usr/bin/env sh` 다음에 아래 블록을 넣어 만들고 실행 권한을 준다. 있으면 이 블록이 들어 있는지 확인하고, 없으면 **shebang 바로 다음**에 넣는다. 다른 검사(kopring 등)가 파일이 없을 때 `exit 0`하거나 `exec`로 끝나므로 그보다 앞에 있어야 한다.
+2. `.githooks/pre-commit`이 없으면 `#!/usr/bin/env sh` 다음에 아래 블록을 넣어 만들고 실행 권한을 준다. 있으면 이 블록이 들어 있는지 확인하고, 없으면 **shebang 바로 다음**에 넣는다. 예전 nextts 블록이 있고 내용이 다르면(검사 파일 목록 등) 이 블록으로 바꾼다. 다른 검사(kopring 등)가 파일이 없을 때 `exit 0`하거나 `exec`로 끝나므로 그보다 앞에 있어야 한다.
    ```sh
    # 커밋되는 프론트엔드 파일의 Next.js 컨벤션 검사와 타입 검사 (nextts 플러그인)
-   next_files=$(git diff --cached --name-only --diff-filter=ACM -- '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.jsx' '*.mjs' '*.cjs' '*package.json' '*tsconfig.json' '*.env*')
+   next_files=$(git diff --cached --name-only --diff-filter=ACM -- '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.css' '*package.json' '*tsconfig.json' '*.env*')
    if [ -n "$next_files" ]; then
      next_check="$(git rev-parse --show-toplevel)/scripts/conventions/check_next_conventions.py"
      # shellcheck disable=SC2086
