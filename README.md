@@ -4,7 +4,7 @@ Claude Code 플러그인 마켓플레이스.
 
 | 플러그인 | 내용 | 명령 |
 |---|---|---|
-| `planning` | 기획을 한 주제씩 닫는 진행 방식. 백로그 항목 하나 = 브랜치 하나 = 이슈 하나. git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어) | `/planning:init`, `/planning:backlog`, `/planning:spec`, `/planning:commit`, `/planning:done`, `/planning:handoff` |
+| `planning` | 기획을 한 주제씩 닫는 진행 방식. 백로그 항목 하나 = 브랜치 하나 = 이슈 하나. git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어, 개발 브랜치 선언 시 dev에서 분기·dev로 PR) | `/planning:init`, `/planning:backlog`, `/planning:spec`, `/planning:commit`, `/planning:done`, `/planning:handoff` |
 | `kopring` | Kotlin + Spring Boot 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 | `/kopring:init`, 셸에서 `kopring-check` |
 | `nextts` | Next.js(16+, App Router) + TypeScript 컨벤션. `.ts`/`.tsx` 작업 시 규칙 자동 적용, 편집 전 검사 훅(JS 파일·`NEXT_PUBLIC_` 비밀값·메모이제이션·Tailwind 클래스 조립과 색 임의값·접근성 등) | `/nextts:init`, 셸에서 `nextts-check` |
 | `design` | 와이어프레임·화면 디자인을 Claude 아티팩트에 두고 코드와 맞추는 방식. 탭 구성(화면 > 컴포넌트 > 토큰), 화면 구현 전 읽기, 커밋에 rev·pub 기록. 프레임워크와 무관 | `/design:init` |
