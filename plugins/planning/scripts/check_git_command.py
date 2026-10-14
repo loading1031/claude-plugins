@@ -10,6 +10,10 @@
 - commit-refs     : 기획·코드 브랜치(기본 브랜치가 아닌 곳)의 커밋에 `Refs:` trailer
 - code-branch-docs: 기획 브랜치(plan/…)가 아닌 작업 브랜치에서 기획 폴더 수정 금지
 - banned-word     : 기획 폴더에 새로 쓰는 줄에 기획 설정 "금지어"가 있으면 금지
+- dev-*           : 기획 설정에 "개발 브랜치"(예: dev)가 있을 때만. 코드는 개발 브랜치에서 분기한 작업 브랜치에서 하고 개발 브랜치로 PR 한다
+  - dev-branch-from : 기본 브랜치에서 코드 브랜치(plan/ 아님)를 만들지 않는다
+  - dev-code-commit : 기본·개발 브랜치에 바로 코드 커밋(feat|fix|refactor|test)을 하지 않는다
+  - dev-pr-base     : 코드 브랜치의 PR base는 개발 브랜치
 """
 import json
 import re
@@ -44,7 +48,9 @@ def settings(root):
     base = value("기본 브랜치", "main").split()[0].strip("`")
     words = value("금지어", "")
     banned = [w.strip().strip("`\"") for w in re.split(r"[,、]", words) if w.strip() and words != "없음"]
-    return {"folder": folder, "base": base, "banned": banned}
+    dev = (value("개발 브랜치", "").split() or [""])[0].strip("`")
+    dev = "" if dev == "없음" else dev
+    return {"folder": folder, "base": base, "banned": banned, "dev": dev}
 
 
 def block(rule, msg):
@@ -96,13 +102,30 @@ def added_lines(root, f):
     return [l[1:] for l in diff.splitlines() if l.startswith("+") and not l.startswith("+++")]
 
 
+def check_dev_flow(root, conf, command, branch):
+    """개발 브랜치 규칙: 코드 브랜치는 개발 브랜치에서 만들고 개발 브랜치로 PR 한다."""
+    dev, base = conf["dev"], conf["base"]
+    for seg in segments(command):
+        m = re.search(r"\bgit\s+(?:switch\s+(?:-c|--create|-C)|checkout\s+-[bB])\s+(\S+)(?:\s+(\S+))?", seg)
+        if m and not m.group(1).startswith("plan/"):
+            start = m.group(2)
+            if (start is None and branch == base) or start in (base, f"origin/{base}"):
+                block("dev-branch-from", f"코드 브랜치 `{m.group(1)}`는 `{dev}`에서 만든다: `git switch -c {m.group(1)} {dev}` (기획 설정 \"개발 브랜치\").")
+        pr = re.search(r"\bgh\s+pr\s+create\b(.*)", seg, re.S)
+        if pr and branch and not branch.startswith("plan/") and branch not in (base, dev):
+            target = re.search(r"(?:--base|-B)[=\s]+(\S+)", pr.group(1))
+            if not target or target.group(1).strip("'\"") != dev:
+                block("dev-pr-base", f"코드 브랜치 `{branch}`의 PR은 `{dev}`로 보낸다: `gh pr create --base {dev} …` (기획 설정 \"개발 브랜치\").")
+
+
 def main():
     try:
         data = json.load(sys.stdin)
     except Exception:
         return
     command = (data.get("tool_input") or {}).get("command") or ""
-    if not re.search(r"\bgit\s+(add|commit)\b", command):
+    is_dev_cmd = re.search(r"\bgit\s+(?:switch|checkout)\b|\bgh\s+pr\s+create\b", command)
+    if not re.search(r"\bgit\s+(add|commit)\b", command) and not is_dev_cmd:
         return
     cwd = data.get("cwd") or "."
     m = re.match(r"\s*cd\s+(\S+)\s*&&", command)
@@ -114,6 +137,8 @@ def main():
     conf = settings(root)
     if not conf:
         return
+    if conf["dev"] and is_dev_cmd:
+        check_dev_flow(root, conf, command, git(root, "branch", "--show-current").strip())
 
     paths = add_paths(command)
     commit = re.search(r"\bgit\s+commit\b(.*)", command, re.S)
@@ -127,7 +152,9 @@ def main():
     if has_msg and "--no-edit" not in args:
         if not PREFIX.search(args):
             block("commit-prefix", "커밋 메시지 첫 줄은 `docs:`, `feat:`, `fix:`, `refactor:`, `test:`, `chore:` 중 하나로 시작한다.")
-        if branch and branch != conf["base"] and not re.search(r"^\s*Refs:\s*\S", args, re.M):
+        if conf["dev"] and branch in (conf["base"], conf["dev"]) and re.search(r"(?:^|[\"'])\s*(feat|fix|refactor|test)(\([^)]+\))?!?: ", args, re.M):
+            block("dev-code-commit", f"`{branch}`에 바로 코드 커밋을 하지 않는다. `{conf['dev']}`에서 작업 브랜치를 만들어 커밋하고 `{conf['dev']}`로 PR 한다 (기획 설정 \"개발 브랜치\").")
+        if branch and branch not in (conf["base"], conf["dev"]) and not re.search(r"^\s*Refs:\s*\S", args, re.M):
             block("commit-refs", f"`{branch}` 브랜치의 커밋 본문 끝에 `Refs: #<이슈>`(이슈가 없으면 `Refs: <백로그 ID>`)를 넣는다.")
 
     commit_all = bool(re.search(r"(^|\s)(-a|--all|-[a-z]*a[a-z]*)\b", args.split("-m")[0]))
