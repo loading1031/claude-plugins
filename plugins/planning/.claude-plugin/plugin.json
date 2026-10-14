@@ -1,6 +1,6 @@
 {
   "name": "planning",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "기획을 한 주제씩 닫는 진행 방식: 백로그에서 고르고(/planning:backlog), 결정을 문서에 반영하고(/planning:spec), 커밋한 뒤(/planning:commit), 브랜치를 합친다(/planning:done). 백로그 항목 하나 = 브랜치 하나, 작업지시서는 GitHub 이슈(또는 파일)",
   "author": { "name": "loading1031" },
   "license": "MIT"
