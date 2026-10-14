@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # /nextts:init — 프로젝트에 컨벤션 적용
 
-Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 프로젝트 위치(`next`를 의존성에 둔 `package.json`), React Compiler 사용 여부(`next.config.*`), Tailwind 버전(`tailwindcss`), UI 컴포넌트 폴더(`components.json`), 구조 검사(`server/` 폴더)는 검사기가 알아서 찾는다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
+Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 프로젝트 위치(`next`를 의존성에 둔 `package.json`), React Compiler 사용 여부(`next.config.*`), Tailwind 버전(`tailwindcss`), UI 컴포넌트 폴더(`components.json`), 구조 검사(`server/` 폴더)는 검사기가 알아서 찾는다. 생성된 API 타입(openapi-typescript 표시가 있는 파일)은 항상 수정을 막는다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
 
 ## 절차
 
@@ -38,7 +38,15 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 
 - `.env.example`이 없으면 만든다: 변수 이름 전부, 값은 비우고 private/public을 주석으로 표시. `.gitignore`가 `.env*`를 무시하면 `!.env.example` 줄을 더한다.
 - 이미 `server/`가 있으면 `nextts-check`로 `arch/*` 위반을 보여 주고, `process.env`를 env 모듈로 옮길지 묻는다.
 
-### 5. pre-commit 훅
+### 5. API 클라이언트 (서버가 `openapi/openapi.json`을 만드는 경우)
+근거: `${CLAUDE_SKILL_DIR}/../../docs/conventions/api-client.md`. 저장소 루트에 `openapi/openapi.json`이 없으면 서버 쪽(kopring `/kopring:init` 3단계)을 먼저 하라고 안내하고 건너뛴다.
+1. 의존성: `openapi-fetch`(dependencies), `openapi-typescript`(devDependencies)를 lockfile의 패키지 매니저로 추가한다.
+2. `package.json`에 `"api:generate": "openapi-typescript <Next 루트에서 본 상대 경로>/openapi/openapi.json -o server/api/schema.d.ts"`를 넣고 실행한다.
+3. `${CLAUDE_PLUGIN_ROOT}/templates/api-client/client.ts` → `server/api/client.ts`. `__BACKEND_URL_KEY__`는 `server/env.ts`의 백엔드 주소 키로 바꾼다. 인증 헤더 미들웨어는 사용자와 채운다.
+4. `api-spec-sync.yml` → `.github/workflows/`. `__DEV_BRANCH__`는 기획 설정의 "개발 브랜치"(없으면 기본 브랜치), `__FRONT_DIR__`는 저장소 루트에서 본 Next 루트(예: `frontend`), `__NODE_VERSION__`은 프로젝트 Node 버전.
+5. GitHub App 설정을 확인한다: `gh variable list`에 `APP_CLIENT_ID`, `gh secret list`에 `APP_PRIVATE_KEY`가 있는지. 없으면 문서의 "자동 갱신" 절대로 안내한다(앱 만들기 → 권한 Contents·Pull requests 쓰기 → 저장소에 설치 → Client ID·private key 등록).
+
+### 6. pre-commit 훅
 1. `${CLAUDE_PLUGIN_ROOT}/scripts/check_next_conventions.py`를 저장소의 `scripts/conventions/check_next_conventions.py`로 복사한다. 이미 있고 내용이 다르면 차이를 보여 주고 덮어쓸지 묻는다.
 2. `.githooks/pre-commit`이 없으면 `#!/usr/bin/env sh` 다음에 아래 블록을 넣어 만들고 실행 권한을 준다. 있으면 이 블록이 들어 있는지 확인하고, 없으면 **shebang 바로 다음**에 넣는다. 예전 nextts 블록이 있고 내용이 다르면(검사 파일 목록 등) 이 블록으로 바꾼다. 다른 검사(kopring 등)가 파일이 없을 때 `exit 0`하거나 `exec`로 끝나므로 그보다 앞에 있어야 한다.
    ```sh
@@ -55,7 +63,7 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 
 3. git 저장소면 `git config core.hooksPath .githooks`를 실행한다. 이미 다른 hooksPath가 설정돼 있으면 바꾸지 말고 사용자에게 알린다.
 4. 플러그인을 업데이트한 뒤에는 이 명령을 다시 실행해 복사본을 맞추라고 안내한다. 복사본이 플러그인 검사기와 다르면 Claude 훅이 편집 때마다 경고한다.
 
-### 6. 확인
+### 7. 확인
 - `python3 --version`이 3.10 이상인지 확인한다.
 - 결과를 요약한다: CLAUDE.md에 쓴 값, 옮긴 JS 파일, 만든 `server/`·env 파일, 복사한 파일, hooksPath 설정 여부.
 
