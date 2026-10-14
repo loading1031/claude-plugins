@@ -40,6 +40,7 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 �
    - `OpenApiSpecTest.kt` → 테스트 루트 패키지
    - `api-spec-drift.yml` → `.github/workflows/`. `__DEV_BRANCH__`는 기획 설정의 "개발 브랜치"(없으면 기본 브랜치), `__JAVA_VERSION__`은 프로젝트 JDK, `__GRADLE_DIR__`는 `gradlew`가 있는 폴더(저장소 루트면 `.`)
 3. `build.gradle.kts`의 `tasks.test`에 `systemProperty("openapi.output", …)`를 넣는다. 경로는 저장소 루트의 `openapi/openapi.json`
+   `application.yml`에 `springdoc.default-produces-media-type: application/json`을 넣는다(없으면 응답이 `*/*`로 나와 프론트 타입이 어긋난다)
 4. `./gradlew test --tests '*OpenApiSpecTest'`를 돌려 `openapi/openapi.json`이 생기는지, BigDecimal 필드가 `"type" : "string"`인지 확인한다. `/v3/api-docs`가 보안 필터에 막히면 사용자와 처리 방법을 정한다
 
 ### 4. pre-commit 훅
