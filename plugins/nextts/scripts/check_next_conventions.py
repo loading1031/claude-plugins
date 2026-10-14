@@ -33,6 +33,35 @@ REACT_NS_MEMO = re.compile(r"\bReact\.(?:useMemo|useCallback|memo)\b")
 USE_CLIENT = re.compile(r"\A(?:\s|//[^\n]*\n|/\*.*?\*/)*['\"]use client['\"]", re.S)
 REACT_COMPILER_ON = re.compile(r"\breactCompiler\s*:\s*(?:true|\{)")
 
+# Tailwind 유틸리티 중 값이 붙는 접두어. 동적 클래스 조립과 임의값 검사에 쓴다
+TW_PREFIX = (
+    r"(?:bg|text|border(?:-[trblxy])?|ring|outline|fill|stroke|from|via|to|decoration|divide|shadow|caret|accent|"
+    r"placeholder|p[xytrbl]?|m[xytrbl]?|w|h|size|min-w|max-w|min-h|max-h|gap(?:-[xy])?|space-[xy]|grid-cols|grid-rows|"
+    r"col-span|row-span|rounded(?:-[trbl]{1,2})?|font|leading|tracking|z|top|left|right|bottom|inset(?:-[xy])?|opacity|"
+    r"translate-[xy]|scale|rotate|basis|order)"
+)
+TW_COLOR_PREFIX = (
+    r"(?:bg|text|border(?:-[trblxy])?|ring|outline|fill|stroke|from|via|to|decoration|divide|shadow|caret|accent|placeholder)"
+)
+TW_PALETTE = (
+    r"(?:black|white|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|"
+    r"indigo|violet|purple|fuchsia|pink|rose|mauve|olive|mist|taupe)"
+)
+# bg-${color}-500, `text-${size}`, "bg-" + color: Tailwind는 소스를 글자로만 읽어 이런 클래스를 만들지 못한다
+DYNAMIC_CLASS = re.compile(rf"\b{TW_PREFIX}-\$\{{|['\"`]{TW_PREFIX}-['\"`]\s*\+")
+ARBITRARY_COLOR = re.compile(rf"\b{TW_COLOR_PREFIX}-\[(?:#|(?:rgba?|hsla?|oklch|oklab|lab|lch|color-mix)\(|color:)")
+STYLE_BLOCK = re.compile(r"style=\{\{(.*?)\}\}", re.S)
+STYLE_COLOR = re.compile(
+    r"\b(?:color|background|backgroundColor|borderColor|outlineColor|fill|stroke)\s*:\s*['\"`]\s*(?:#|(?:rgba?|hsla?|oklch|oklab)\()"
+)
+DARK_PALETTE = re.compile(rf"\bdark:(?:[\w-]+:)*{TW_COLOR_PREFIX}-{TW_PALETTE}(?:-\d{{2,3}})?(?:/\d+)?\b")
+V3_DIRECTIVE = re.compile(r"^\s*@tailwind\s+(?:base|components|utilities)\b")
+RAW_CONTROL = re.compile(r"<(button|input|select|textarea)\b")
+# 태그 속성 안의 화살표 함수(=>)는 건너뛰고 태그 끝(< 또는 >)까지 본다
+CLICK_ON_DIV = re.compile(r"<(?:div|span)\b((?:=>|[^<>])*?)\bonClick\s*=", re.S)
+NEXT_IMAGE_TAG = re.compile(r"<Image\b((?:=>|[^<>])*?)/?>", re.S)
+RAW_IMG = re.compile(r"<img\b")
+
 _root_cache: dict[str, Path | None] = {}
 _conv_cache: dict[str, dict] = {}
 
@@ -66,6 +95,35 @@ def react_compiler_on(root: Path) -> bool:
         if f.is_file() and REACT_COMPILER_ON.search(f.read_text(encoding="utf-8", errors="ignore")):
             return True
     return False
+
+
+def _package_json(root: Path) -> dict:
+    try:
+        return json.loads((root / "package.json").read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return {}
+
+
+def tailwind_major(root: Path) -> int:
+    """package.json의 tailwindcss 버전 범위에서 주 버전을 읽는다. 없으면 0(Tailwind 규칙 끔)."""
+    data = _package_json(root)
+    spec = {**data.get("dependencies", {}), **data.get("devDependencies", {})}.get("tailwindcss")
+    if spec is None:
+        return 0
+    m = re.search(r"\d+", spec)
+    return int(m.group()) if m else 4
+
+
+def ui_dir(root: Path) -> str | None:
+    """components.json(shadcn)의 aliases.ui에서 UI 컴포넌트 폴더를 읽는다. 파일이 없으면 None(재사용 검사 끔)."""
+    f = root / "components.json"
+    if not f.is_file():
+        return None
+    try:
+        alias = json.loads(f.read_text(encoding="utf-8")).get("aliases", {}).get("ui") or "components/ui"
+    except (ValueError, OSError):
+        alias = "components/ui"
+    return "/" + re.sub(r"^(?:@/|~/|#)", "", alias).strip("/") + "/"
 
 
 def _setting(body: str, key: str) -> str:
@@ -156,6 +214,16 @@ def find_violations(path: str, content: str) -> list[tuple[str, str, int, str]]:
                 add("ts/no-allow-js", "tsconfig의 allowJs는 false → JS 파일을 프로젝트에 들이지 않는다", no, line.strip())
         return found
 
+    tw = tailwind_major(root)
+    if tw >= 4 and name.startswith("tailwind.config."):
+        add("tailwind/no-config-file", "Tailwind v4는 설정 파일을 쓰지 않는다 → globals.css의 @theme에 토큰을 둔다", 1, name)
+        return found
+    if name.endswith(".css"):
+        for no, line in enumerate(lines, 1):
+            if tw >= 4 and V3_DIRECTIVE.match(line):
+                add("tailwind/no-config-file", "@tailwind 지시어는 v3 방식 → @import \"tailwindcss\";", no, line.strip())
+        return found
+
     if name == "package.json":
         for no, line in enumerate(lines, 1):
             if not conf["webpack_ok"] and re.search(r"\bnext\s+(?:dev|build)\b[^\"]*--webpack\b", line):
@@ -195,6 +263,58 @@ def find_violations(path: str, content: str) -> list[tuple[str, str, int, str]]:
         for no, line in _memo_violations(lines, content):
             add("memo/no-manual-memo", "useMemo·useCallback·memo를 쓰지 않는다(React Compiler가 맡는다) → 컴파일러가 잘못 최적화할 때만 \"use no memo\"와 이유 주석",
                 no, line)
+    if not is_env:
+        found.extend(_ui_violations(path, root, tw, name.endswith(".tsx"), lines, content))
+    return found
+
+
+def _line_of(content: str, pos: int) -> int:
+    return content.count("\n", 0, pos) + 1
+
+
+def _ui_violations(path, root, tw, is_jsx, lines, content) -> list[tuple[str, str, int, str]]:
+    found = []
+    if tw:
+        for no, line in enumerate(lines, 1):
+            if _is_comment(line):
+                continue
+            if DYNAMIC_CLASS.search(line):
+                found.append(("tailwind/no-dynamic-class", "클래스 이름을 조립하지 않는다(Tailwind가 찾지 못해 스타일이 빠진다) → 완전한 클래스 이름을 객체·조건으로 고른다",
+                              no, line.strip()))
+            if ARBITRARY_COLOR.search(line):
+                found.append(("tailwind/no-arbitrary-color", "색 임의값을 쓰지 않는다 → globals.css @theme의 색 토큰(bg-primary 등). 없으면 토큰을 먼저 추가한다",
+                              no, line.strip()))
+            if DARK_PALETTE.search(line):
+                found.append(("tailwind/dark-via-token", "dark: 뒤에 팔레트 색을 직접 쓰지 않는다 → 모드에 따라 값이 바뀌는 색 토큰(bg-background 등)",
+                              no, line.strip()))
+        for m in STYLE_BLOCK.finditer(content):
+            if STYLE_COLOR.search(m.group(1)):
+                no = _line_of(content, m.start())
+                found.append(("tailwind/no-arbitrary-color", "style로 색을 직접 주지 않는다 → 색 토큰 클래스나 CSS 변수(var(--…))",
+                              no, lines[no - 1].strip()))
+    if not is_jsx:
+        return found
+    ui = ui_dir(root)
+    if ui and ui not in path:
+        for m in RAW_CONTROL.finditer(content):
+            no = _line_of(content, m.start())
+            if not _is_comment(lines[no - 1]):
+                tag = m.group(1)
+                found.append(("ui/use-ui-component", f"<{tag}>를 직접 쓰지 않는다 → {ui.strip('/')}의 컴포넌트({tag.capitalize()} 등). 없으면 shadcn으로 추가한다",
+                              no, lines[no - 1].strip()))
+    for m in CLICK_ON_DIV.finditer(content):
+        if "role=" not in m.group(1):
+            no = _line_of(content, m.start())
+            found.append(("a11y/no-click-on-div", "div·span에 onClick을 달지 않는다(키보드·스크린 리더로 못 쓴다) → <button> 또는 <Link>",
+                          no, lines[no - 1].strip()))
+    for m in RAW_IMG.finditer(content):
+        no = _line_of(content, m.start())
+        if not _is_comment(lines[no - 1]):
+            found.append(("a11y/image", "<img> 대신 next/image의 <Image>와 alt", no, lines[no - 1].strip()))
+    for m in NEXT_IMAGE_TAG.finditer(content):
+        if not re.search(r"\balt\s*=", m.group(1)):
+            no = _line_of(content, m.start())
+            found.append(("a11y/image", "<Image>에 alt를 준다(꾸밈용이면 alt=\"\")", no, lines[no - 1].strip()))
     return found
 
 

@@ -3,7 +3,7 @@
 # 사용: nextts-check [파일...]
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "$#" -eq 0 ]; then
-  set -- $(git ls-files '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.jsx' '*.mjs' '*.cjs' '*package.json' '*tsconfig.json' '*.env*')
+  set -- $(git ls-files '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.css' '*package.json' '*tsconfig.json' '*.env*')
   [ "$#" -eq 0 ] && { echo "검사할 파일이 없습니다"; exit 0; }
 fi
 CLAUDE_PLUGIN_ROOT="$ROOT" exec python3 "$ROOT/scripts/check_next_conventions.py" --files "$@"
