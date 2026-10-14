@@ -534,6 +534,10 @@ def run_hook() -> int:
     tool = payload.get("tool_name", "")
     tool_input = payload.get("tool_input", {}) or {}
     path = tool_input.get("file_path", "")
+    # 테스트(OpenApiSpecTest)가 만드는 API 스펙은 손으로 고치지 않는다
+    if path.replace("\\", "/").endswith("openapi/openapi.json") and tool in ("Write", "Edit", "MultiEdit"):
+        print(f"[kotlin-conventions] {path}\n  [api/spec-generated] openapi/openapi.json은 테스트가 만든다 → 컨트롤러·DTO를 고치고 ./gradlew test --tests '*OpenApiSpecTest'로 다시 만든다", file=sys.stderr)
+        return 2
     if not path.endswith(".kt"):
         return 0
     p = Path(path)
