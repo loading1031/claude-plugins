@@ -10,7 +10,7 @@ user-invocable: false
 
 먼저 프로젝트 루트 `CLAUDE.md`의 `## 기획 설정` 절을 읽는다. 없으면 아래 기본값을 쓰고, 사용자에게 `/planning:init`을 안내한다.
 
-**버전 확인:** 이 규칙은 planning **0.6.1**이다. 기획 설정의 "최소 버전"이 이보다 높으면 멈추고, 사용자에게 Claude Code 밖에서 `claude plugin marketplace update <마켓플레이스>` → `claude plugin update planning@<마켓플레이스>` 후 재시작하라고 안내한다. 낮은 버전 스킬로 진행하지 않는다.
+**버전:** 플러그인에 버전 번호를 두지 않는다. 마켓플레이스 저장소의 커밋이 곧 버전이고, 프로젝트는 `.claude/settings.json`의 `extraKnownMarketplaces`에 `"autoUpdate": true`를 두어 늘 최신 커밋을 받는다(세션 시작 후 백그라운드로 받고, 다음 실행이나 `/reload-plugins`에 반영). 기획 설정에 최소 버전을 쓰지 않는다.
 
 **CLAUDE.md에는 설정값만 둔다.** 진행 절차(명령 순서, 커밋·브랜치·이슈 규칙)는 이 플러그인의 스킬이 원본이다. 프로젝트 CLAUDE.md에 절차를 옮겨 적지 않는다(두 벌이 되면 어긋난다). 프로젝트 고유의 예외만 설정에 쓴다.
 
@@ -24,7 +24,6 @@ user-invocable: false
 | 기본 브랜치 | `main` | 기획이 끝나면 합쳐지는 브랜치 |
 | 기획 브랜치 | `plan/<ID>-<slug>` | 백로그 항목 하나당 브랜치 하나. 예: `plan/B-03-frontend` |
 | 합치기 방식 | 원격이 GitHub이면 `PR`, 없으면 `local` | `PR`: 머지 커밋 방식으로 PR을 합치고 PR 본문의 `Closes #N`으로 이슈를 닫음. `local`: `git merge --no-ff`. 둘 다 squash·rebase는 쓰지 않음 |
-| 최소 버전 | 없음 | 이 프로젝트가 기대하는 planning 버전. 스킬 버전이 낮으면 멈춘다 |
 | 금지어 | 없음 | 기획 폴더에 쓰지 않을 말(쉼표로 구분). 훅이 커밋 때 검사한다. 인용(`"단계"`)은 허용 |
 | 작업지시서 | 원격이 GitHub이면 `issue`, 없으면 `file` | `issue`: 항목마다 GitHub 이슈 하나(본문 = 지시서, 댓글 = 진행 메모). `file`: `<폴더>/work-orders.md`. 1.6 참고 |
 

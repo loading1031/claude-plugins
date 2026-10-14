@@ -15,6 +15,17 @@ claude plugin install planning@loading1031-plugins --scope project
 claude plugin install kopring@loading1031-plugins --scope project
 ```
 
+플러그인에는 버전 번호가 없다. 커밋이 곧 버전이라, 프로젝트 `.claude/settings.json`에 자동 업데이트를 켜 두면 늘 최신을 쓴다:
+
+```json
+"extraKnownMarketplaces": {
+  "loading1031-plugins": {
+    "source": { "source": "github", "repo": "loading1031/claude-plugins" },
+    "autoUpdate": true
+  }
+}
+```
+
 프로젝트마다 한 번:
 
 - `/planning:init` — CLAUDE.md에 기획 설정 절, backlog.md·log.md 생성
