@@ -12,6 +12,11 @@
       "name": "kopring",
       "source": "./plugins/kopring",
       "description": "Kotlin + Spring Boot 컨벤션 규칙과 .kt 편집 전 검사 훅 (Zed + Claude Code)"
+    },
+    {
+      "name": "nextts",
+      "source": "./plugins/nextts",
+      "description": "Next.js + TypeScript 컨벤션 규칙과 편집 전 검사 훅 (Next 16+ App Router, TypeScript만)"
     }
   ]
 }

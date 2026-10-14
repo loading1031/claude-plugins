@@ -6,6 +6,7 @@ Claude Code 플러그인 마켓플레이스.
 |---|---|---|
 | `planning` | 기획을 한 주제씩 닫는 진행 방식. 백로그 항목 하나 = 브랜치 하나 = 이슈 하나. git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어) | `/planning:init`, `/planning:backlog`, `/planning:spec`, `/planning:commit`, `/planning:done`, `/planning:handoff` |
 | `kopring` | Kotlin + Spring Boot 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 | `/kopring:init`, 셸에서 `kopring-check` |
+| `nextts` | Next.js(16+, App Router) + TypeScript 컨벤션. `.ts`/`.tsx` 작업 시 규칙 자동 적용, 편집 전 검사 훅(JS 파일·`NEXT_PUBLIC_` 비밀값·React Compiler 프로젝트의 메모이제이션 등) | `/nextts:init`, 셸에서 `nextts-check` |
 
 ## 설치
 
@@ -13,6 +14,7 @@ Claude Code 플러그인 마켓플레이스.
 claude plugin marketplace add loading1031/claude-plugins   # 로컬이면 경로
 claude plugin install planning@loading1031-plugins --scope project
 claude plugin install kopring@loading1031-plugins --scope project
+claude plugin install nextts@loading1031-plugins --scope project
 ```
 
 플러그인에는 버전 번호가 없다. 커밋이 곧 버전이라, 프로젝트 `.claude/settings.json`에 자동 업데이트를 켜 두면 늘 최신을 쓴다:
@@ -30,6 +32,7 @@ claude plugin install kopring@loading1031-plugins --scope project
 
 - `/planning:init` — CLAUDE.md에 기획 설정 절, backlog.md·log.md 생성
 - `/kopring:init` — CLAUDE.md에 컨벤션 선언, pre-commit 훅 설치
+- `/nextts:init` — CLAUDE.md에 프론트엔드 컨벤션 선언, JS 설정 파일을 `.ts`로, pre-commit 훅 설치(검사 + `tsc --noEmit`)
 
 ## 출처
 

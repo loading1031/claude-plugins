@@ -1,0 +1,9 @@
+#!/bin/sh
+# Next.js 컨벤션 검사를 파일 목록에 실행한다. 인자가 없으면 git이 추적하는 프론트엔드 파일 전체.
+# 사용: nextts-check [파일...]
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ "$#" -eq 0 ]; then
+  set -- $(git ls-files '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.jsx' '*.mjs' '*.cjs' '*package.json' '*tsconfig.json' '*.env*')
+  [ "$#" -eq 0 ] && { echo "검사할 파일이 없습니다"; exit 0; }
+fi
+CLAUDE_PLUGIN_ROOT="$ROOT" exec python3 "$ROOT/scripts/check_next_conventions.py" --files "$@"
