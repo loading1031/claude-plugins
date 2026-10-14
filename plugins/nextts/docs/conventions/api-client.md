@@ -20,7 +20,8 @@ import type { components } from "@/server/api/schema";
 type Order = components["schemas"]["Order"];
 ```
 
-- `package.json`: `"api:generate": "openapi-typescript <저장소 루트>/openapi/openapi.json -o server/api/schema.d.ts"`
+- `package.json`: `"api:generate": "openapi-typescript <저장소 루트>/openapi/openapi.json --properties-required-by-default -o server/api/schema.d.ts"`
+- `--properties-required-by-default`: springdoc(Kotlin)은 non-null 필드를 `required`로 표시하지 않고 nullable만 `["string","null"]`로 표시한다. 이 옵션이 없으면 모든 필드가 선택값(`code?: string`)이 된다. 있으면 `code: string`, `limitPrice: string | null`
 - 호출은 `server/`를 거친다. `openapi-fetch`를 `server/` 밖에서 값으로 import하면 막는다(`api/client-in-server`, `server/` 폴더가 있을 때). `import type`은 실행 코드가 없어 번들에 들어가지 않으므로 허용한다.
 
 ## 왜 openapi-typescript + openapi-fetch인가
@@ -51,3 +52,14 @@ type Order = components["schemas"]["Order"];
 - 프론트 쪽 drift 검사는 두지 않는다. 스펙 머지와 재생성 PR 사이의 차이는 정상이다
 
 템플릿: `${CLAUDE_PLUGIN_ROOT}/templates/api-client/` (`/nextts:init`이 복사한다).
+
+## 실제로 돌려 본 결과 (2026-10-15)
+
+stock 저장소의 테스트 브랜치에서 이 템플릿을 그대로 돌렸다(브랜치·PR은 확인 후 정리).
+
+| 확인 | 결과 |
+|---|---|
+| 스펙이 바뀌지 않은 push | 동기화 Action 성공, GitHub App 토큰 발급 성공, PR 안 만듦 |
+| 서버가 응답 필드를 추가하고 스펙을 갱신한 push | Action이 `loading1031-bot`(GitHub App) 이름으로 `chore: API 스펙 갱신` PR을 열었다. 바뀐 파일은 `schema.d.ts` 하나(`currency: string` 추가) |
+| 그 PR에서 CI가 도나 | 돈다. 타입 검사·drift 검사가 `pull_request`로 실행돼 통과(`GITHUB_TOKEN`이었다면 돌지 않는다) |
+| 생성 타입 | `price: string`, `quantity: number`, `limitPrice: string \| null`. 사용 코드 타입 검사 통과 |

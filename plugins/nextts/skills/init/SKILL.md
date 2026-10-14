@@ -41,7 +41,7 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 
 ### 5. API 클라이언트 (서버가 `openapi/openapi.json`을 만드는 경우)
 근거: `${CLAUDE_SKILL_DIR}/../../docs/conventions/api-client.md`. 저장소 루트에 `openapi/openapi.json`이 없으면 서버 쪽(kopring `/kopring:init` 3단계)을 먼저 하라고 안내하고 건너뛴다.
 1. 의존성: `openapi-fetch`(dependencies), `openapi-typescript`(devDependencies)를 lockfile의 패키지 매니저로 추가한다.
-2. `package.json`에 `"api:generate": "openapi-typescript <Next 루트에서 본 상대 경로>/openapi/openapi.json -o server/api/schema.d.ts"`를 넣고 실행한다.
+2. `package.json`에 `"api:generate": "openapi-typescript <Next 루트에서 본 상대 경로>/openapi/openapi.json --properties-required-by-default -o server/api/schema.d.ts"`를 넣고 실행한다.
 3. `${CLAUDE_PLUGIN_ROOT}/templates/api-client/client.ts` → `server/api/client.ts`. `__BACKEND_URL_KEY__`는 `server/env.ts`의 백엔드 주소 키로 바꾼다. 인증 헤더 미들웨어는 사용자와 채운다.
 4. `api-spec-sync.yml` → `.github/workflows/`. `__DEV_BRANCH__`는 기획 설정의 "개발 브랜치"(없으면 기본 브랜치), `__FRONT_DIR__`는 저장소 루트에서 본 Next 루트(예: `frontend`), `__NODE_VERSION__`은 프로젝트 Node 버전.
 5. GitHub App 설정을 확인한다: `gh variable list`에 `APP_CLIENT_ID`, `gh secret list`에 `APP_PRIVATE_KEY`가 있는지. 없으면 문서의 "자동 갱신" 절대로 안내한다(앱 만들기 → 권한 Contents·Pull requests 쓰기 → 저장소에 설치 → Client ID·private key 등록).

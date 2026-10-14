@@ -26,6 +26,16 @@
 - DB 등 통합 테스트 설정(Testcontainers 등)은 프로젝트의 것을 그대로 쓴다.
 - `/v3/api-docs`가 보안 필터(서비스 키 등) 뒤에 있으면 테스트에서 헤더를 붙이거나 테스트 프로필에서 그 경로를 연다.
 
+## 꼭 넣을 설정
+
+```yaml
+# application.yml
+springdoc:
+  default-produces-media-type: application/json   # 없으면 응답 미디어 타입이 */*로 나온다
+```
+
+- Kotlin non-null 필드는 springdoc 3.1.1이 스펙에 `required`로 표시하지 않는다. 대신 nullable 필드(`String?`)는 `"type": ["string", "null"]`로 정확히 표시한다(OpenAPI 3.1). 그래서 프론트가 `openapi-typescript --properties-required-by-default`로 생성하면 non-null은 `string`, nullable은 `string | null`이 된다(nextts `api-client.md`). Jackson은 null 필드도 키를 넣어 보내므로 응답과 맞는다.
+
 ## BigDecimal은 문자열 (`JacksonConfig`, `OpenApiConfig`)
 
 JSON 숫자는 받는 쪽(JavaScript)에서 double이 되어 소수 정밀도를 잃는다. 금액·가격·비율·환율은 문자열로 보내고, 정수(수량·건수)는 숫자로 둔다.
@@ -43,4 +53,14 @@ JSON 숫자는 받는 쪽(JavaScript)에서 double이 되어 소수 정밀도를
 | `SpringDocUtils` | `org.springdoc.core.utils.SpringDocUtils.replaceWithSchema(Class, Schema)` | jar 확인 |
 | GitHub Actions | checkout v7, setup-java v6, gradle/actions v6 | 각 저장소 최신 릴리스 |
 
-템플릿: `${CLAUDE_PLUGIN_ROOT}/templates/api-spec/` (`/kopring:init`이 복사한다). 실제 프로젝트에서 처음 돌릴 때 생성된 스펙의 BigDecimal이 `string`인지 확인한다.
+템플릿: `${CLAUDE_PLUGIN_ROOT}/templates/api-spec/` (`/kopring:init`이 복사한다).
+
+## 실제로 돌려 본 결과 (2026-10-15)
+
+stock 저장소의 테스트 브랜치에 Spring Boot 4.1.1(Kotlin 2.4.21, JDK 17) 최소 앱과 이 템플릿을 그대로 넣어 GitHub Actions에서 돌렸다(브랜치는 확인 후 지움).
+
+| 확인 | 결과 |
+|---|---|
+| `OpenApiSpecTest`가 스펙을 만드나 | 만든다. BigDecimal은 `"type": "string", "format": "decimal"`, Long은 `integer/int64`, nullable은 `["string","null"]` |
+| 스펙과 코드가 같을 때 drift 검사 | 통과 |
+| 스펙을 갱신하지 않고 응답 필드를 추가 | drift 검사 실패, 빠진 필드가 diff로 보이고 안내 문구가 나온다 |
