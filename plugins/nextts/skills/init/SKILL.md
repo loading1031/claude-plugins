@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # /nextts:init — 프로젝트에 컨벤션 적용
 
-Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 프로젝트 위치(`next`를 의존성에 둔 `package.json`), React Compiler 사용 여부(`next.config.*`), Tailwind 버전(`tailwindcss`), UI 컴포넌트 폴더(`components.json`)는 검사기가 알아서 찾는다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
+Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 프로젝트 위치(`next`를 의존성에 둔 `package.json`), React Compiler 사용 여부(`next.config.*`), Tailwind 버전(`tailwindcss`), UI 컴포넌트 폴더(`components.json`), 구조 검사(`server/` 폴더)는 검사기가 알아서 찾는다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
 
 ## 절차
 
@@ -32,7 +32,13 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 
 - `tsconfig.json`의 `allowJs`를 `false`로 바꾼다.
 - 근거: `${CLAUDE_SKILL_DIR}/../../docs/conventions/typescript.md`
 
-### 4. pre-commit 훅
+### 4. server/와 환경변수
+근거: `${CLAUDE_SKILL_DIR}/../../docs/conventions/architecture.md`. `server/` 폴더가 있으면 구조 검사가 켜진다.
+- Next 루트(또는 `src/`)에 `server/`가 없으면 만들지 묻는다. 만들면 `server/env.ts`(`import "server-only"`, 필요한 private 변수를 `required()`로 읽음)와 `lib/public-env.ts`(`NEXT_PUBLIC_` 변수를 이름 그대로 읽음)를 만든다. 변수 이름은 사용자에게 묻거나 `.env.example`·기존 코드의 `process.env`에서 모은다.
+- `.env.example`이 없으면 만든다: 변수 이름 전부, 값은 비우고 private/public을 주석으로 표시. `.gitignore`가 `.env*`를 무시하면 `!.env.example` 줄을 더한다.
+- 이미 `server/`가 있으면 `nextts-check`로 `arch/*` 위반을 보여 주고, `process.env`를 env 모듈로 옮길지 묻는다.
+
+### 5. pre-commit 훅
 1. `${CLAUDE_PLUGIN_ROOT}/scripts/check_next_conventions.py`를 저장소의 `scripts/conventions/check_next_conventions.py`로 복사한다. 이미 있고 내용이 다르면 차이를 보여 주고 덮어쓸지 묻는다.
 2. `.githooks/pre-commit`이 없으면 `#!/usr/bin/env sh` 다음에 아래 블록을 넣어 만들고 실행 권한을 준다. 있으면 이 블록이 들어 있는지 확인하고, 없으면 **shebang 바로 다음**에 넣는다. 예전 nextts 블록이 있고 내용이 다르면(검사 파일 목록 등) 이 블록으로 바꾼다. 다른 검사(kopring 등)가 파일이 없을 때 `exit 0`하거나 `exec`로 끝나므로 그보다 앞에 있어야 한다.
    ```sh
@@ -49,9 +55,9 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. Next 
 3. git 저장소면 `git config core.hooksPath .githooks`를 실행한다. 이미 다른 hooksPath가 설정돼 있으면 바꾸지 말고 사용자에게 알린다.
 4. 플러그인을 업데이트한 뒤에는 이 명령을 다시 실행해 복사본을 맞추라고 안내한다. 복사본이 플러그인 검사기와 다르면 Claude 훅이 편집 때마다 경고한다.
 
-### 5. 확인
+### 6. 확인
 - `python3 --version`이 3.10 이상인지 확인한다.
-- 결과를 요약한다: CLAUDE.md에 쓴 값, 옮긴 JS 파일, 복사한 파일, hooksPath 설정 여부.
+- 결과를 요약한다: CLAUDE.md에 쓴 값, 옮긴 JS 파일, 만든 `server/`·env 파일, 복사한 파일, hooksPath 설정 여부.
 
 ## 참고
 - 규칙 전체와 rule id 색인: `${CLAUDE_SKILL_DIR}/../../docs/conventions/README.md`

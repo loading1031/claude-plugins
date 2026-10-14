@@ -22,7 +22,7 @@ Next.js(16 이상, App Router) + TypeScript 프로젝트의 컨벤션이다. 특
 | 표시 | 뜻 | 바꾸려면 |
 |---|---|---|
 | **범용** | 이 플러그인을 쓰는 모든 프로젝트에 적용 | 플러그인을 고친다 |
-| **팀** | 합리적인 기본값. 조건(React Compiler, `tailwindcss`, `components.json`)이 맞을 때만 켜지거나 선언으로 끈다 | 조건·선언을 바꾼다 |
+| **팀** | 합리적인 기본값. 조건(React Compiler, `tailwindcss`, `components.json`, `server/` 폴더)이 맞을 때만 켜지거나 선언으로 끈다 | 조건·선언을 바꾼다 |
 | **프로젝트** | 프로젝트 `CLAUDE.md` "프론트엔드 컨벤션" 절에 선언한 값으로 동작 | 선언을 고친다(`/nextts:init`) |
 
 ## 강제 수단
@@ -43,6 +43,7 @@ Next.js(16 이상, App Router) + TypeScript 프로젝트의 컨벤션이다. 특
 |---|---|
 | [컴포넌트](components.md) | `"use client"` 위치, `server-only`, 메모이제이션과 React Compiler |
 | [TypeScript와 도구](typescript.md) | JS 파일 금지, 설정 파일을 `.ts`로, `allowJs`, Turbopack, 타입 검사 |
+| [구조와 환경변수](architecture.md) | `server/` 폴더, private·public 환경변수 관리(`server/env.ts`, `lib/public-env.ts`) |
 | [비밀값과 백엔드](backend-and-secrets.md) | `NEXT_PUBLIC_`, 백엔드는 서버에서만 호출(BFF), 쓰지 않는 라이브러리 |
 | [Tailwind와 화면](tailwind-and-ui.md) | v4 설정, 클래스 조립 금지, 색·다크 모드는 토큰, UI 컴포넌트 재사용, 화면 상태, 접근성, 모바일 우선 |
 
@@ -58,6 +59,8 @@ Next.js(16 이상, App Router) + TypeScript 프로젝트의 컨벤션이다. 특
 | `memo/no-manual-memo` | 팀 | `useMemo`·`useCallback`·`memo`를 `react`에서 가져오거나 `React.`으로 쓰지 않음. `next.config.*`에 `reactCompiler`가 켜진 프로젝트에서만 | [컴포넌트](components.md) |
 | `bundler/no-webpack` | 팀 | `package.json`의 `next dev`·`next build`에 `--webpack` 금지. 선언 "번들러: webpack 허용"이면 끔 | [TypeScript와 도구](typescript.md) |
 | `project/backend-server-only` | 프로젝트 | "백엔드 호출: 서버만"일 때 백엔드 주소 환경변수에 `NEXT_PUBLIC_`을 붙이거나 클라이언트 컴포넌트에서 읽지 않음 | [비밀값과 백엔드](backend-and-secrets.md) |
+| `arch/server-only-marker` | 팀 | `server/`가 있으면 그 안의 파일(`.d.ts` 제외)에 `import "server-only"` 필수 | [구조와 환경변수](architecture.md) |
+| `arch/env-via-module` | 팀 | `server/`가 있으면 `process.env`는 `server/env.ts`·`lib/public-env.ts`(`NEXT_PUBLIC_`만)·설정 파일에서만 | [구조와 환경변수](architecture.md) |
 | `tailwind/no-config-file` | 팀 | Tailwind v4에서 `tailwind.config.*` 새 파일, CSS의 `@tailwind` 지시어 금지 | [Tailwind와 화면](tailwind-and-ui.md) |
 | `tailwind/no-dynamic-class` | 팀 | `` `bg-${x}-500` ``, `"text-" + x`처럼 클래스 이름 조립 금지 | [Tailwind와 화면](tailwind-and-ui.md) |
 | `tailwind/no-arbitrary-color` | 팀 | 색 임의값(`text-[#f00]`), `style`의 색 리터럴 금지. 크기·간격 임의값은 허용 | [Tailwind와 화면](tailwind-and-ui.md) |
