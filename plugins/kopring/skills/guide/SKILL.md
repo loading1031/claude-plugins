@@ -15,7 +15,7 @@ Zed + Claude Code로 Kotlin + Spring Boot를 개발할 때의 컨벤션이다. Z
 | 규칙이 왜 있는지 | `${CLAUDE_SKILL_DIR}/../../docs/environment/zed.md` (Zed에서 안 되는 것) |
 | 계층형 vs 헥사고날 선택 | `${CLAUDE_SKILL_DIR}/../../docs/architecture/choosing.md` |
 | 캐시 / 다중 저장소 / 읽기·쓰기 분리 / 외부 API / 이벤트 | `${CLAUDE_SKILL_DIR}/../../docs/architecture/` 아래 `cache.md`, `multi-datastore.md`, `read-write-split.md`, `external-api.md`, `event-driven.md` |
-| 주제별 컨벤션 | `${CLAUDE_SKILL_DIR}/../../docs/conventions/` 아래 `persistence.md`, `dependency-injection.md`, `configuration.md`, `web-api.md`, `testing.md`, `coroutines.md`, `kotlin-spring.md`, `values.md`(시각·소수·비밀) |
+| 주제별 컨벤션 | `${CLAUDE_SKILL_DIR}/../../docs/conventions/` 아래 `persistence.md`, `dependency-injection.md`, `configuration.md`, `web-api.md`, `testing.md`, `coroutines.md`, `kotlin-spring.md`, `values.md`(시각·소수·비밀), `api-spec.md`(프론트와의 API 스펙 계약) |
 
 ## 지킬 것
 

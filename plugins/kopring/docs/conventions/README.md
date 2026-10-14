@@ -43,6 +43,7 @@ git config core.hooksPath .githooks
 | [코루틴](coroutines.md) | 코루틴 디버거 없음 |
 | [Kotlin + Spring 기본](kotlin-spring.md) | Kotlin `final` 기본값과 Spring·JPA 충돌 |
 | [값: 시각·소수·비밀](values.md) | 타입으로 드러나지 않는 시각·소수·비밀값 실수 |
+| [API 스펙 계약](api-spec.md) | 프론트와 API가 어긋나도 컴파일러가 모름 → `openapi/openapi.json`을 PR마다 갱신, BigDecimal은 문자열 |
 
 ## 검사 규칙 색인
 
@@ -76,6 +77,7 @@ git config core.hooksPath .githooks
 | `bigdecimal/rounding-mode` | 범용 | `divide`, `setScale`에 `RoundingMode`/`MathContext` 필수 | [값](values.md) |
 | `bigdecimal/no-double-ctor` | 범용 | `BigDecimal(0.1)`처럼 `Double`로 생성 금지 | [값](values.md) |
 | `log/no-secret` | 범용 | 로그 호출에 비밀번호·키·토큰 금지 | [값](values.md) |
+| `api/spec-generated` | 팀 | `openapi/openapi.json` 직접 수정 금지(테스트가 만든다). CI drift 검사는 `api-spec-drift.yml` | [API 스펙 계약](api-spec.md) |
 | `project/forbidden-tech` | 프로젝트 | 프로젝트 `CLAUDE.md` "컨벤션"의 "쓰지 않는 기술"(Redis, Kafka, RabbitMQ, R2DBC, MongoDB, Elasticsearch, WebFlux) import 금지 | `/kopring:init` |
 | `project/client-location` | 프로젝트 | "클라이언트 위치"에 적은 클라이언트는 그 경로(와 `config`)에서만 (테스트 제외) | `/kopring:init` |
 

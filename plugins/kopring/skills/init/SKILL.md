@@ -1,13 +1,13 @@
 ---
 name: init
-description: 프로젝트에 kopring 컨벤션을 적용한다 — CLAUDE.md에 구조·케이스 선언, pre-commit 훅 설치
+description: 프로젝트에 kopring 컨벤션을 적용한다 — CLAUDE.md에 구조·케이스 선언, API 스펙 계약 설치, pre-commit 훅 설치
 disable-model-invocation: true
 argument-hint: "[hexagonal | layered]"
 ---
 
 # /kopring:init — 프로젝트에 컨벤션 적용
 
-Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 명령은 플러그인이 대신할 수 없는 두 가지만 한다.
+Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 명령은 플러그인이 대신할 수 없는 것만 한다.
 
 1. **CLAUDE.md 선언**: 아키텍처 규칙(`architecture` 스킬)은 프로젝트가 어느 구조를 쓰는지 알아야 한다.
 2. **pre-commit 훅**: 사람이 Zed에서 직접 고친 코드도 검사하려면 git 훅이 저장소 안의 고정 경로에 있어야 한다. 플러그인 캐시 경로는 버전마다 바뀌므로 검사 스크립트를 저장소에 복사한다.
@@ -32,7 +32,17 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 �
 - 클라이언트 위치: <없으면 "없음". 예: JdbcClient → adapter/out/timeseries>   <!-- 훅 project/client-location -->
 ```
 
-### 3. pre-commit 훅
+### 3. API 스펙 계약 (프론트가 이 API를 쓰는 경우)
+근거: `${CLAUDE_SKILL_DIR}/../../docs/conventions/api-spec.md`. 프론트(Next 등)가 이 서버 API를 쓰는지 묻고, 쓰지 않으면 건너뛴다.
+1. 의존성 `org.springdoc:springdoc-openapi-starter-webmvc-ui`(Spring Boot 4는 3.x, 확인 시점 3.1.1)가 없으면 추가한다.
+2. `${CLAUDE_PLUGIN_ROOT}/templates/api-spec/`에서 복사한다. `__BASE_PACKAGE__`는 기본 패키지로 바꾼다. 같은 이름의 파일이 있으면 차이를 보여 주고 묻는다.
+   - `JacksonConfig.kt`, `OpenApiConfig.kt` → `config` 패키지
+   - `OpenApiSpecTest.kt` → 테스트 루트 패키지
+   - `api-spec-drift.yml` → `.github/workflows/`. `__DEV_BRANCH__`는 기획 설정의 "개발 브랜치"(없으면 기본 브랜치), `__JAVA_VERSION__`은 프로젝트 JDK, `__GRADLE_DIR__`는 `gradlew`가 있는 폴더(저장소 루트면 `.`)
+3. `build.gradle.kts`의 `tasks.test`에 `systemProperty("openapi.output", …)`를 넣는다. 경로는 저장소 루트의 `openapi/openapi.json`
+4. `./gradlew test --tests '*OpenApiSpecTest'`를 돌려 `openapi/openapi.json`이 생기는지, BigDecimal 필드가 `"type" : "string"`인지 확인한다. `/v3/api-docs`가 보안 필터에 막히면 사용자와 처리 방법을 정한다
+
+### 4. pre-commit 훅
 1. `${CLAUDE_PLUGIN_ROOT}/scripts/check_kotlin_conventions.py`를 프로젝트의 `scripts/conventions/check_kotlin_conventions.py`로 복사한다. 이미 있고 내용이 다르면 차이를 보여 주고 덮어쓸지 묻는다.
 2. `.githooks/pre-commit`이 없으면 아래 내용으로 만들고 실행 권한을 준다. 있으면 이 검사 줄이 들어 있는지만 확인한다.
    ```sh
@@ -46,7 +56,7 @@ Claude 훅과 코드 규칙은 플러그인을 켜면 바로 동작한다. 이 �
 3. git 저장소면 `git config core.hooksPath .githooks`를 실행한다. 이미 다른 hooksPath가 설정돼 있으면 바꾸지 말고 사용자에게 알린다.
 4. 플러그인을 업데이트한 뒤에는 이 명령을 다시 실행해 복사본을 맞추라고 안내한다. 복사본이 플러그인 검사기와 다르면 Claude 훅이 편집 때마다 경고한다.
 
-### 4. 확인
+### 5. 확인
 - `python3 --version`이 3.10 이상인지 확인한다.
 - 결과를 요약한다: CLAUDE.md에 쓴 값, 복사한 파일, hooksPath 설정 여부.
 
