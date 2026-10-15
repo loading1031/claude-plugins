@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "planning",
-  "description": "기획을 한 주제씩 닫는 진행 방식: 백로그에서 고르고(/planning:backlog), 결정을 문서에 반영하고(/planning:spec), 커밋한 뒤(/planning:commit), 브랜치를 합친다(/planning:done). 백로그 항목 하나 = 브랜치 하나, 작업지시서는 GitHub 이슈(또는 파일)",
+  "description": "GitHub 이슈 또는 파일 백로그에서 작업을 고르고, 진행 기록을 읽어 세션을 재개하며, 기획·커밋·완료를 이슈의 전체 완료 기준에 연결한다",
   "author": {
     "name": "loading1031"
   },
