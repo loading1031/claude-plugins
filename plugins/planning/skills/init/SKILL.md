@@ -1,11 +1,14 @@
 ---
 name: init
-description: 프로젝트에 기획 진행 방식을 설정한다 — CLAUDE.md에 기획 설정 절 추가, backlog.md·log.md 생성
+description: 프로젝트에 기획 진행 방식을 설정한다 — 프로젝트 설정에 이슈 또는 파일 백로그 방식을 지정한다
 disable-model-invocation: true
 argument-hint: "[기획 폴더 경로]"
 ---
 
 # /planning:init — 기획 진행 방식 설정
+
+
+먼저 `rules`에서 백로그 모드를 확인한다. **이슈 모드이면 [이슈 모드 참조](../rules/references/issue-backlog.md)의 이 명령 절차를 적용하고 아래 파일 모드 절차는 실행하지 않는다.** 프로젝트의 명시적 예외와 기존 사용자 승인 범위를 우선한다.
 
 ## 절차
 
@@ -17,6 +20,7 @@ argument-hint: "[기획 폴더 경로]"
    - 용어 (정해 둔 용어, 쓰지 않을 말. 없으면 "없음")
    - 기본 브랜치 (보통 `main`. `git symbolic-ref --short HEAD`나 기존 브랜치로 확인)
    - 개발 브랜치 (코드를 기본 브랜치와 따로 모을 브랜치. 예 `dev`. 쓰지 않으면 "없음". 쓰는데 브랜치가 없으면 기본 브랜치에서 만들고 push할지 묻는다)
+   - 백로그 방식 (`issue` 또는 `file`). `issue`이면 작업 추적 저장소 `OWNER/REPO`를 확인한다
    - 작업지시서를 둘 곳 (원격이 GitHub이면 `issue`, 아니면 `file`)
    - 금지어 (기획 문서에 쓰지 않을 말. 없으면 "없음")
    - 동기화 표 (프로젝트 고유의 "무엇이 바뀌면 어디를 함께 고치나". 없으면 플러그인 기본 표를 씀)

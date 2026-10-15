@@ -1,13 +1,15 @@
 ---
 name: backlog
-description: 기획 백로그에서 다음 주제를 고르거나, 후보를 추가·추린다
+description: 프로젝트의 GitHub 이슈 또는 파일 백로그에서 다음 작업을 고르고 진행 기록을 읽어 재개한다
 disable-model-invocation: true
-argument-hint: "[add <주제> | pick <ID> | sweep]"
+argument-hint: "[add <주제> | pick <이슈 번호 또는 ID> | sweep]"
 ---
 
 # /planning:backlog — 다음 기획 주제 고르기
 
 먼저 `rules` 스킬을 따른다(프로젝트 기획 설정 읽기, backlog 형식). 인자: `$ARGUMENTS`
+
+먼저 `rules`에서 백로그 모드를 확인한다. **이슈 모드이면 [이슈 모드 참조](../rules/references/issue-backlog.md)의 이 명령 절차를 적용하고 아래 파일 모드 절차는 실행하지 않는다.** 프로젝트의 명시적 예외와 기존 사용자 승인 범위를 우선한다.
 
 ## 인자 없음 — 다음 주제 추천
 1. `<폴더>/backlog.md`를 읽는다. "권장 순서" 표가 있으면 그 순서를 우선한다.

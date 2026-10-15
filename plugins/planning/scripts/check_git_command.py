@@ -31,14 +31,19 @@ def git(cwd, *args):
 
 
 def settings(root):
-    claude = Path(root) / "CLAUDE.md"
-    if not claude.exists():
+    sections = []
+    for name in ("AGENTS.md", "CLAUDE.md"):
+        path = Path(root) / name
+        if not path.exists():
+            continue
+        match = re.search(r"^## 기획 설정\s*$(.*?)(?=^## |\Z)", path.read_text(encoding="utf-8"), re.M | re.S)
+        if match:
+            sections.append(match.group(1))
+    if not sections:
         return None
-    text = claude.read_text(encoding="utf-8")
-    m = re.search(r"^## 기획 설정\s*$(.*?)(?=^## |\Z)", text, re.M | re.S)
-    if not m:
-        return None
-    body = m.group(1)
+    if len(sections) > 1 and sections[0].strip() != sections[1].strip():
+        block("settings-conflict", "AGENTS.md와 CLAUDE.md의 기획 설정이 다르다. 공통 설정 한 곳으로 정리한다.")
+    body = sections[0]
 
     def value(key, default):
         v = re.search(rf"^- {key}:\s*(.+)$", body, re.M)
@@ -50,7 +55,11 @@ def settings(root):
     banned = [w.strip().strip("`\"") for w in re.split(r"[,、]", words) if w.strip() and words != "없음"]
     dev = (value("개발 브랜치", "").split() or [""])[0].strip("`")
     dev = "" if dev == "없음" else dev
-    return {"folder": folder, "base": base, "banned": banned, "dev": dev}
+    backlog = value("백로그", "").strip("`")
+    issue_mode = backlog == "issue" or (
+        not backlog and value("작업지시서", "").strip("`") == "issue" and bool(value("작업 추적", ""))
+    )
+    return {"folder": folder, "base": base, "banned": banned, "dev": dev, "issue_mode": issue_mode}
 
 
 def block(rule, msg):
@@ -161,7 +170,7 @@ def main():
     files = changed_files(root, paths, commit_all)
     planning = [f for f in files if f == conf["folder"] or f.startswith(conf["folder"] + "/")]
 
-    if planning and branch and branch != conf["base"] and not branch.startswith("plan/"):
+    if planning and not conf["issue_mode"] and branch and branch != conf["base"] and not branch.removeprefix("codex/").startswith("plan/"):
         block("code-branch-docs", f"`{branch}`는 기획 브랜치가 아니다. `{conf['folder']}/` 수정은 plan/<ID>-<slug> 브랜치에서 한다: {', '.join(sorted(planning))}")
 
     for f in planning:

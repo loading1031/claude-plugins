@@ -8,7 +8,7 @@ user-invocable: false
 
 ## 0. 프로젝트 설정 읽기
 
-먼저 프로젝트 루트 `CLAUDE.md`의 `## 기획 설정` 절을 읽는다. 없으면 아래 기본값을 쓰고, 사용자에게 `/planning:init`을 안내한다.
+먼저 프로젝트 루트 `AGENTS.md`와 `CLAUDE.md` 및 그 파일이 가리키는 공통 규칙을 읽고 `## 기획 설정` 절을 찾는다. 같은 설정을 두 파일에 복사하지 않는다. 프로젝트의 명시적 예외와 현재 사용자 지시를 기본 절차보다 우선한다. 없으면 아래 기본값을 쓰고, 사용자에게 `/planning:init`을 안내한다.
 
 **버전:** 플러그인에 버전 번호를 두지 않는다. 마켓플레이스 저장소의 커밋이 곧 버전이고, 프로젝트는 `.claude/settings.json`의 `extraKnownMarketplaces`에 `"autoUpdate": true`를 두어 늘 최신 커밋을 받는다(세션 시작 후 백그라운드로 받고, 다음 실행이나 `/reload-plugins`에 반영). 기획 설정에 최소 버전을 쓰지 않는다.
 
@@ -26,7 +26,15 @@ user-invocable: false
 | 기획 브랜치 | `plan/<ID>-<slug>` | 백로그 항목 하나당 브랜치 하나. 예: `plan/B-03-frontend` |
 | 합치기 방식 | 원격이 GitHub이면 `PR`, 없으면 `local` | `PR`: 머지 커밋 방식으로 PR을 합치고 PR 본문의 `Closes #N`으로 이슈를 닫음. `local`: `git merge --no-ff`. 둘 다 squash·rebase는 쓰지 않음 |
 | 금지어 | 없음 | 기획 폴더에 쓰지 않을 말(쉼표로 구분). 훅이 커밋 때 검사한다. 인용(`"단계"`)은 허용 |
+| 백로그 | `file` (단, `작업지시서: issue`와 `작업 추적`이 함께 있으면 `issue`) | `file`: backlog.md 색인. `issue`: GitHub 이슈가 작업 목록이자 지시서이며 별도 백로그 파일을 만들지 않음 |
+| 작업 추적 | 없음 | GitHub 저장소 `OWNER/REPO`. 이슈 모드에서는 필수. 원격과 다르면 프로젝트 설정의 의도를 확인 |
 | 작업지시서 | 원격이 GitHub이면 `issue`, 없으면 `file` | `issue`: 항목마다 GitHub 이슈 하나(본문 = 지시서, 댓글 = 진행 메모). `file`: `<폴더>/work-orders.md`. 1.6 참고 |
+
+## 이슈 백로그 모드의 우선 절차
+
+`백로그: issue`이거나, 백로그 설정 없이 `작업지시서: issue`와 `작업 추적: OWNER/REPO`가 함께 있으면 [GitHub 이슈 모드](references/issue-backlog.md)를 읽는다. 명시적 `백로그: file`은 기존 방식을 유지한다.
+
+이슈 모드에서는 아래 기본 절차 중 backlog.md·work-orders.md·log.md를 만들거나 갱신하는 단계, B-ID와 plan 라벨 의무, 기획만 끝나면 이슈를 닫는 단계를 이 참조의 절차로 대체한다. `backlog`, `spec`, `commit`, `handoff`, `done`, `init` 모두 같은 모드와 저장소를 사용한다. 파일 모드에는 아래 절차를 그대로 적용한다.
 
 ## 1. 문서
 
