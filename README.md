@@ -59,3 +59,15 @@ Claude Code는 위 마켓플레이스 설치를 사용한다. Codex용 portable 
 `/planning:backlog`는 열린 이슈에서 진행 중 작업과 다음 후보를 보여 주고, `/planning:backlog pick 17`은 해당 이슈의 본문·댓글과 관련 문서를 읽어 현재 세션에서 재개한다. 새 세션에서도 같은 저장소 설정을 읽으므로 이관한 todo 목록을 다시 설명할 필요가 없다. 세션을 자동 생성하는 기능은 아니다. 명령 표기는 클라이언트가 제공하는 스킬 호출 방식을 따른다.
 
 이슈 모드는 backlog.md·work-orders.md·log.md를 중복 생성하지 않는다. 기획만 끝난 구현 이슈를 닫지 않으며, 전체 완료 기준을 충족한 뒤에만 종료한다.
+
+### Codex 설치 확인
+
+원격 저장소에 push한 것만으로 Codex에 설치되지는 않는다. 최초 한 번 마켓플레이스를 등록하고 planning을 설치한다.
+
+```sh
+codex plugin marketplace add loading1031/claude-plugins --ref main
+codex plugin add planning@loading1031-plugins
+codex plugin list --marketplace loading1031-plugins --json
+```
+
+목록에서 planning의 installed/enabled 상태를 확인한 뒤 새 세션에서 스킬 선택기를 사용한다. 설치된 스킬은 저장소의 명령 파일이 아니라 Codex 플러그인 캐시에서 로드된다. 새 세션에서도 목록이 갱신되지 않으면 앱을 재시작한다. 업데이트 시에는 `codex plugin marketplace upgrade loading1031-plugins` 후 `codex plugin add planning@loading1031-plugins`로 설치본을 갱신한다.
