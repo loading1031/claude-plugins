@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "nextts",
+  "description": "Next.js + TypeScript 컨벤션: 코드 작성 규칙(스킬)과 편집 전 검사 훅, Tailwind·UI 규칙 포함. Next 16+ App Router, TypeScript만",
+  "author": {
+    "name": "loading1031"
+  },
+  "homepage": "https://github.com/loading1031/claude-plugins",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json"
+    }
+  }
+}

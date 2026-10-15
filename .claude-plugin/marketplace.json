@@ -1,7 +1,9 @@
 {
   "name": "loading1031-plugins",
   "description": "loading1031의 Claude Code 플러그인 모음",
-  "owner": { "name": "loading1031" },
+  "owner": {
+    "name": "loading1031"
+  },
   "plugins": [
     {
       "name": "planning",
@@ -22,6 +24,11 @@
       "name": "design",
       "source": "./plugins/design",
       "description": "디자인 문서(Claude 아티팩트) 작업 방식: 탭 구성, 화면 구현 전 읽기, rev·pub 기준 기록"
+    },
+    {
+      "name": "django",
+      "source": "./plugins/django",
+      "description": "기본 Django 서버·템플릿 프런트엔드 컨벤션. Tailwind CSS 4 + DaisyUI 5 기본, HTMX·async는 필요한 경우에만 사용."
     }
   ]
 }
