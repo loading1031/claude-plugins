@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "django",
+  "description": "기본 Django 서버·템플릿 프런트엔드 컨벤션. Tailwind CSS 4 + DaisyUI 5 기본, HTMX·async는 필요한 경우에만 사용.",
+  "author": {
+    "name": "loading1031"
+  },
+  "homepage": "https://github.com/loading1031/claude-plugins",
+  "license": "MIT"
+}

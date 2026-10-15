@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "kopring",
+  "description": "Kotlin + Spring Boot 컨벤션: 코드 작성 규칙(스킬)과 .kt 편집 전 검사 훅. Zed + Claude Code 환경 기준",
+  "author": {
+    "name": "loading1031"
+  },
+  "homepage": "https://github.com/loading1031/kopring-conventions",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "hooks": "./hooks/hooks.json"
+    }
+  }
+}

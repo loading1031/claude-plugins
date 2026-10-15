@@ -1,6 +1,6 @@
 ---
 name: caching
-description: @Cacheable과 Redis 캐시 규칙(캐시 이름 상수, 엔티티 캐시 금지, 커밋 후 무효화, 분산 락 순서). 캐시를 다룰 때 사용
+description: "@Cacheable과 Redis 캐시 규칙(캐시 이름 상수, 엔티티 캐시 금지, 커밋 후 무효화, 분산 락 순서). 캐시를 다룰 때 사용"
 paths: "**/*.kt"
 user-invocable: false
 ---

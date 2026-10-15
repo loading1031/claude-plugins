@@ -1,6 +1,6 @@
 ---
 name: configuration-and-testing
-description: @ConfigurationProperties 설정값 규칙과 테스트 규칙(컨텍스트 로딩, Testcontainers). 설정이나 테스트를 쓸 때 사용
+description: "@ConfigurationProperties 설정값 규칙과 테스트 규칙(컨텍스트 로딩, Testcontainers). 설정이나 테스트를 쓸 때 사용"
 paths: "**/*.kt, **/application*.yml, **/application*.yaml, **/application*.properties"
 user-invocable: false
 ---
