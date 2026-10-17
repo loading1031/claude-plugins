@@ -8,7 +8,7 @@ Claude Code 플러그인 마켓플레이스.
 | `kopring` | Kotlin + Spring Boot 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 | `/kopring:init`, 셸에서 `kopring-check` |
 | `nextts` | Next.js(16+, App Router) + TypeScript 컨벤션. `.ts`/`.tsx` 작업 시 규칙 자동 적용, 편집 전 검사 훅(JS 파일·`NEXT_PUBLIC_` 비밀값·메모이제이션·Tailwind 클래스 조립과 색 임의값·접근성 등) | `/nextts:init`, 셸에서 `nextts-check` |
 | `django` | 기본 Django 서버·템플릿 + Tailwind CSS 4·DaisyUI 5. HTMX·async 선택 적용. Claude/Codex 공용 스킬 | `/django:init`, `/django:guide`, `/django:server`, `/django:templates`, `/django:htmx` |
-| `design` | 프로젝트 `design/`에 HTML·SVG 설계서를 만드는 방식. 전체 IA·흐름 → 화면별 설명·와이어프레임 → 컴포넌트·토큰. 작성 후 검토는 PR 리뷰 의견으로 관리하고 승인된 Git 기준·구현 연결 지원 | `/design:init` |
+| `design` | 기존 UI 자산 확인 → IA·와이어프레임 승인 → 토큰·컴포넌트 구현·카탈로그 전시 → 화면 조합·검증. `design/`은 설계·승인 기준과 실제 코드·카탈로그를 연결하며 전시 도구는 프로젝트가 선택 | `/design:init` |
 
 ## 설치
 
@@ -38,7 +38,7 @@ claude plugin install django@loading1031-plugins --scope project
 - `/kopring:init` — CLAUDE.md에 컨벤션 선언, pre-commit 훅 설치
 - `/nextts:init` — CLAUDE.md에 프론트엔드 컨벤션 선언, JS 설정 파일을 `.ts`로, pre-commit 훅 설치(검사 + `tsc --noEmit`)
 - `/django:init` — Django 프로젝트 설정과 컨벤션 연결. 의존성·migration·훅을 자동 설치하지 않음
-- `/design:init` — 프로젝트 `design/index.html` 생성·연결, IA·화면·컴포넌트·토큰 탐색 구성, CLAUDE.md에 로컬 경로와 승인 기준 기록. 외부 아티팩트나 계정·수동 업로드 불필요
+- `/design:init` — 기존 토큰·컴포넌트·전시 도구를 찾아 `design/index.html`의 IA·와이어프레임과 연결하고 CLAUDE.md에 문서·승인 기준·코드 원본·카탈로그 경로 기록. Storybook·Django 패턴 라이브러리·서버 템플릿 카탈로그 등 기존 구성을 재사용
 
 ## 출처
 
