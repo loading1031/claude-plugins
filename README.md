@@ -8,7 +8,7 @@ Claude Code 플러그인 마켓플레이스.
 | `kopring` | Kotlin + Spring Boot 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 | `/kopring:init`, 셸에서 `kopring-check` |
 | `nextts` | Next.js(16+, App Router) + TypeScript 컨벤션. `.ts`/`.tsx` 작업 시 규칙 자동 적용, 편집 전 검사 훅(JS 파일·`NEXT_PUBLIC_` 비밀값·메모이제이션·Tailwind 클래스 조립과 색 임의값·접근성 등) | `/nextts:init`, 셸에서 `nextts-check` |
 | `django` | 기본 Django 서버·템플릿 + Tailwind CSS 4·DaisyUI 5. HTMX·async 선택 적용. Claude/Codex 공용 스킬 | `/django:init`, `/django:guide`, `/django:server`, `/django:templates`, `/django:htmx` |
-| `design` | 프로젝트 `design/`에 HTML·SVG 설계서를 만드는 방식. 전체 IA·흐름 → 왼쪽 화면 목록 → 화면별 설명·와이어프레임 → 컴포넌트·토큰. 승인된 Git 기준과 구현 연결. 프레임워크와 무관 | `/design:init` |
+| `design` | 프로젝트 `design/`에 HTML·SVG 설계서를 만드는 방식. 전체 IA·흐름 → 화면별 설명·와이어프레임 → 컴포넌트·토큰. 화면 코드에 연결된 로컬 HTML 리뷰 아티팩트와 승인된 Git 기준·구현 연결 지원 | `/design:init` |
 
 ## 설치
 
