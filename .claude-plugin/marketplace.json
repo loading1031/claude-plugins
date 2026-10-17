@@ -23,7 +23,7 @@
     {
       "name": "design",
       "source": "./plugins/design",
-      "description": "디자인 문서(Claude 아티팩트) 작업 방식: 탭 구성, 화면 구현 전 읽기, rev·pub 기준 기록"
+      "description": "프로젝트 design/ 로컬 디자인 문서: IA·흐름 → 화면별 설명·와이어프레임 → 컴포넌트·토큰, 승인된 Git 기준과 구현 연결"
     },
     {
       "name": "django",

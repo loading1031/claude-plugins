@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "design",
-  "description": "디자인 작업 방식: 와이어프레임·화면 디자인을 Claude 아티팩트(Claude Docs)에 두고 코드와 맞춘다. 탭 구성, 화면 구현 전 읽기, rev·pub 기준 기록. 프레임워크와 무관",
+  "description": "프로젝트 design/의 로컬 디자인 작업 방식: 전체 IA·흐름, 왼쪽 화면 목록, 화면별 설명·와이어프레임, 컴포넌트·토큰과 코드 기준 연결. 프레임워크와 무관",
   "author": {
     "name": "loading1031"
   },
