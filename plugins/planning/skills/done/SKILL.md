@@ -26,12 +26,12 @@ argument-hint: "[ID]"
    - **PR 방식** (원격이 GitHub이고 `gh`를 쓸 수 있을 때. 기본):
      ```bash
      git push -u origin <브랜치>
-     gh pr create --base <기본> --head <브랜치> --title "docs: <ID> <주제> 기획" --body "<결과 요약>
+     gh pr create --base <기본> --head <브랜치> --title "docs: <ID> <주제> 기획" --label plan --body "<결과 요약>
 
      Closes #<이슈>"
      gh pr merge <PR 번호> --merge --subject "docs: <ID> <주제> 기획" --body "Closes #<이슈>"
      ```
-     항목에 이슈가 없으면 `Closes` 줄을 뺀다. PR 주소를 보여 준다.
+     항목에 이슈가 없으면 `Closes` 줄을 뺀다. 대상 저장소에 `plan` 라벨이 있는지 먼저 확인하고 없으면 생성한다. PR 주소와 적용 라벨을 보여 준다.
    - **로컬 방식** (원격이 없을 때):
      ```bash
      git switch <기본 브랜치>

@@ -136,6 +136,29 @@ main ──┬──────────────●── (merge) ──
 - **커밋과 이슈:** 커밋은 `Refs: #<이슈>`로 이슈를 가리키고, 이슈는 PR 본문의 `Closes #<이슈>`로만 닫는다.
 - **기본 브랜치에 바로 커밋해도 되는 것:** 설정·도구 변경(`chore:`), 그리고 **결정을 더하거나 바꾸지 않는 작은 문서 수정**(`docs:` — 오타, 깨진 링크, 문구 다듬기, 이미 정한 내용의 위치 이동). 결정이 하나라도 들어가면 기획 브랜치에서 한다. 이 경우 log.md에는 쓰지 않는다.
 
+### 1.5.0 PR 라벨
+
+GitHub PR을 만들 때 변경 범위에 맞는 아래 라벨을 하나 이상 붙인다. 혼합 변경은 해당하는 라벨을 모두 붙인다.
+
+| 라벨 | 적용 기준 | 색상 | 설명 |
+|---|---|---|---|
+| `plan` | 기획 문서·실행 계획만 변경 | `5319e7` | 기획과 계획 문서 |
+| `design` | IA·화면 설명·와이어프레임·디자인 산출물 변경 | `a371f7` | 디자인 산출물 |
+| `server` | 서버·API·데이터 계층 변경 | `1d76db` | 백엔드와 서버 변경 |
+| `front` | 사용자 화면·프런트엔드 변경 | `0e8a16` | 프런트엔드 변경 |
+
+PR을 만들기 전에 대상 저장소에 필요한 라벨이 있는지 확인한다. 빠진 라벨만 만든다. 기존 라벨의 색·설명은 자동으로 덮어쓰지 않는다.
+
+```bash
+gh label list --repo OWNER/REPO
+gh label create plan --repo OWNER/REPO --color 5319e7 --description "기획과 계획 문서"
+gh label create design --repo OWNER/REPO --color a371f7 --description "디자인 산출물"
+gh label create server --repo OWNER/REPO --color 1d76db --description "백엔드와 서버 변경"
+gh label create front --repo OWNER/REPO --color 0e8a16 --description "프런트엔드 변경"
+```
+
+라벨이 없으면 저장소의 라벨 관리자 권한으로 생성할 수 있는지 확인한다. 권한·네트워크 문제를 우회하지 말고 라벨을 적용하지 못했다는 점을 PR 작성자에게 알린다.
+
 ### 1.5.1 훅이 검사하는 것
 
 플러그인 훅(`hooks/hooks.json`, Bash 실행 전)이 기획 설정이 있는 저장소에서 아래를 막는다. 막히면 규칙에 맞게 고쳐 다시 실행한다. 훅을 우회하지 않는다.
@@ -147,6 +170,7 @@ main ──┬──────────────●── (merge) ──
 | `commit-refs` | 기본 브랜치가 아닌 곳에서 `Refs:` 없는 커밋 |
 | `code-branch-docs` | `plan/…`이 아닌 작업 브랜치에서 기획 폴더 커밋 |
 | `banned-word` | 기획 폴더에 새로 쓴 줄의 금지어 |
+| `pr-label-required` | GitHub PR 생성 명령에 `--label`이 없음 |
 
 ## 1.6 작업지시서
 

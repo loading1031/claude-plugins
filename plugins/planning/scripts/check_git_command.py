@@ -14,6 +14,7 @@
   - dev-branch-from : 기본 브랜치에서 코드 브랜치(plan/ 아님)를 만들지 않는다
   - dev-code-commit : 기본·개발 브랜치에 바로 코드 커밋(feat|fix|refactor|test)을 하지 않는다
   - dev-pr-base     : 코드 브랜치의 PR base는 개발 브랜치
+- pr-label-required: GitHub PR 생성 시 --label 누락 금지
 """
 import json
 import re
@@ -146,6 +147,15 @@ def main():
     conf = settings(root)
     if not conf:
         return
+    if re.search(r"\bgh\s+pr\s+create\b", command):
+        for seg in segments(command):
+            pr = re.search(r"\bgh\s+pr\s+create\b(.*)", seg, re.S)
+            if pr:
+                label_args = re.findall(r"(?:^|\s)(?:--label|-l)(?:=|\s+)([^\s]+)", pr.group(1))
+                labels = {label for value in label_args for label in value.strip("\"'").split(",")}
+                if not labels.intersection({"plan", "design", "server", "front"}):
+                    block("pr-label-required", "PR에 변경 범위와 맞는 분류 라벨을 지정한다: `plan`, `design`, `server`, `front` 중 하나 이상. 혼합 변경은 해당 라벨을 함께 지정한다.")
+
     if conf["dev"] and is_dev_cmd:
         check_dev_flow(root, conf, command, git(root, "branch", "--show-current").strip())
 
