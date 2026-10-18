@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "pr-review",
+  "description": "PR 변경을 분류하고 프로젝트 및 플러그인 컨벤션에 맞춰 코드·디자인 리뷰를 수행하는 공통 리뷰 플러그인",
+  "author": {
+    "name": "loading1031"
+  },
+  "homepage": "https://github.com/loading1031/claude-plugins",
+  "license": "MIT"
+}

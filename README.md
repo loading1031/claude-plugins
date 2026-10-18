@@ -4,6 +4,7 @@ Claude Code 플러그인 마켓플레이스.
 
 | 플러그인 | 내용 | 명령 |
 |---|---|---|
+| `pr-review` | PR 변경 범위를 분류하고 관련 플러그인 컨벤션과 프로젝트의 디자인 기준을 적용하는 공통 리뷰 서브에이전트 | `/pr-review:review` |
 | `planning` | 기획을 한 주제씩 닫는 진행 방식. GitHub 이슈 또는 파일 백로그에서 작업 선택·세션 재개. git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어, 개발 브랜치 선언 시 dev에서 분기·dev로 PR) | `/planning:init`, `/planning:backlog`, `/planning:spec`, `/planning:commit`, `/planning:done`, `/planning:handoff` |
 | `kopring` | Kotlin + Spring Boot 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 | `/kopring:init`, 셸에서 `kopring-check` |
 | `nextts` | Next.js(16+, App Router) + TypeScript 컨벤션. `.ts`/`.tsx` 작업 시 규칙 자동 적용, 편집 전 검사 훅(JS 파일·`NEXT_PUBLIC_` 비밀값·메모이제이션·Tailwind 클래스 조립과 색 임의값·접근성 등) | `/nextts:init`, 셸에서 `nextts-check` |
@@ -14,12 +15,15 @@ Claude Code 플러그인 마켓플레이스.
 
 ```sh
 claude plugin marketplace add loading1031/claude-plugins   # 로컬이면 경로
+claude plugin install pr-review@loading1031-plugins --scope project
 claude plugin install planning@loading1031-plugins --scope project
 claude plugin install kopring@loading1031-plugins --scope project
 claude plugin install nextts@loading1031-plugins --scope project
 claude plugin install design@loading1031-plugins --scope project
 claude plugin install django@loading1031-plugins --scope project
 ```
+
+`/pr-review:review`는 현재 PR 또는 지정한 PR을 살펴보고, 변경 파일과 프로젝트 설정에 맞는 플러그인 원본 기준을 적용한다. 디자인 변경이 포함되면 승인 문서·와이어프레임·토큰·컴포넌트 기준도 확인한다. GitHub 리뷰 기능을 사용할 수 있으면 변경 줄에 의견을 연결하고, 사용할 수 없으면 파일·라인별 초안을 제공한다.
 
 플러그인에는 버전 번호가 없다. 커밋이 곧 버전이라, 프로젝트 `.claude/settings.json`에 자동 업데이트를 켜 두면 늘 최신을 쓴다:
 
