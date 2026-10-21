@@ -20,6 +20,7 @@ argument-hint: "[기획 폴더 경로]"
    - 용어 (정해 둔 용어, 쓰지 않을 말. 없으면 "없음")
    - 기본 브랜치 (보통 `main`. `git symbolic-ref --short HEAD`나 기존 브랜치로 확인)
    - 개발 브랜치 (코드를 기본 브랜치와 따로 모을 브랜치. 예 `dev`. 쓰지 않으면 "없음". 쓰는데 브랜치가 없으면 기본 브랜치에서 만들고 push할지 묻는다)
+   - 보호 브랜치 (PR로만 합치는 브랜치. GitHub 보호 규칙이 있으면 `gh api repos/OWNER/REPO/branches/<브랜치>/protection`으로 확인. 없으면 "없음")
    - 백로그 방식 (`issue` 또는 `file`). `issue`이면 작업 추적 저장소 `OWNER/REPO`를 확인한다
    - 작업지시서를 둘 곳 (원격이 GitHub이면 `issue`, 아니면 `file`)
    - 금지어 (기획 문서에 쓰지 않을 말. 없으면 "없음")
@@ -36,6 +37,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit)
 - 용어: 없음
 - 기본 브랜치: main
 - 개발 브랜치: 없음   <!-- 예: dev. 코드 브랜치는 여기서 분기하고 여기로 PR -->
+- 보호 브랜치: 없음   <!-- 예: main, dev. 바로 커밋하지 않고 PR로만 합친다 -->
 - 기획 브랜치: plan/<ID>-<slug>
 - 합치기 방식: PR (원격이 GitHub이 아니면 local)
 - 작업지시서: issue (원격이 GitHub이 아니면 file)

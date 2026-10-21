@@ -14,6 +14,8 @@
   - dev-branch-from : 기본 브랜치에서 코드 브랜치(plan/ 아님)를 만들지 않는다
   - dev-code-commit : 기본·개발 브랜치에 바로 코드 커밋(feat|fix|refactor|test)을 하지 않는다
   - dev-pr-base     : 코드 브랜치의 PR base는 개발 브랜치
+  - chore/·docs/ 브랜치는 코드 브랜치로 보지 않는다(작은 설정·문서 수정을 기본 브랜치로 PR 할 때)
+- protected-commit: 기획 설정 "보호 브랜치"에 있는 브랜치에 바로 커밋 금지 (PR로만 합친다)
 - pr-label-required: GitHub PR 생성 시 --label 누락 금지
 """
 import json
@@ -23,6 +25,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+LABELS = {"plan", "design", "server", "front", "chore"}
+SMALL_BRANCH = ("plan/", "chore/", "docs/")
 PREFIX = re.compile(r"(?:^|[\"'])\s*(docs|feat|fix|refactor|test|chore)(\([^)]+\))?!?: \S", re.M)
 
 
@@ -56,11 +60,13 @@ def settings(root):
     banned = [w.strip().strip("`\"") for w in re.split(r"[,、]", words) if w.strip() and words != "없음"]
     dev = (value("개발 브랜치", "").split() or [""])[0].strip("`")
     dev = "" if dev == "없음" else dev
+    guarded = value("보호 브랜치", "")
+    protected = [b.strip().strip("`") for b in re.split(r"[,\s]+", re.sub(r"\(.*?\)", "", guarded)) if b.strip() and guarded != "없음"]
     backlog = value("백로그", "").strip("`")
     issue_mode = backlog == "issue" or (
         not backlog and value("작업지시서", "").strip("`") == "issue" and bool(value("작업 추적", ""))
     )
-    return {"folder": folder, "base": base, "banned": banned, "dev": dev, "issue_mode": issue_mode}
+    return {"folder": folder, "base": base, "banned": banned, "dev": dev, "protected": protected, "issue_mode": issue_mode}
 
 
 def block(rule, msg):
@@ -117,12 +123,12 @@ def check_dev_flow(root, conf, command, branch):
     dev, base = conf["dev"], conf["base"]
     for seg in segments(command):
         m = re.search(r"\bgit\s+(?:switch\s+(?:-c|--create|-C)|checkout\s+-[bB])\s+(\S+)(?:\s+(\S+))?", seg)
-        if m and not m.group(1).startswith("plan/"):
+        if m and not m.group(1).startswith(SMALL_BRANCH):
             start = m.group(2)
             if (start is None and branch == base) or start in (base, f"origin/{base}"):
                 block("dev-branch-from", f"코드 브랜치 `{m.group(1)}`는 `{dev}`에서 만든다: `git switch -c {m.group(1)} {dev}` (기획 설정 \"개발 브랜치\").")
         pr = re.search(r"\bgh\s+pr\s+create\b(.*)", seg, re.S)
-        if pr and branch and not branch.startswith("plan/") and branch not in (base, dev):
+        if pr and branch and not branch.startswith(SMALL_BRANCH) and branch not in (base, dev):
             target = re.search(r"(?:--base|-B)[=\s]+(\S+)", pr.group(1))
             if not target or target.group(1).strip("'\"") != dev:
                 block("dev-pr-base", f"코드 브랜치 `{branch}`의 PR은 `{dev}`로 보낸다: `gh pr create --base {dev} …` (기획 설정 \"개발 브랜치\").")
@@ -153,8 +159,8 @@ def main():
             if pr:
                 label_args = re.findall(r"(?:^|\s)(?:--label|-l)(?:=|\s+)([^\s]+)", pr.group(1))
                 labels = {label for value in label_args for label in value.strip("\"'").split(",")}
-                if not labels.intersection({"plan", "design", "server", "front"}):
-                    block("pr-label-required", "PR에 변경 범위와 맞는 분류 라벨을 지정한다: `plan`, `design`, `server`, `front` 중 하나 이상. 혼합 변경은 해당 라벨을 함께 지정한다.")
+                if not labels.intersection(LABELS):
+                    block("pr-label-required", "PR에 변경 범위와 맞는 분류 라벨을 지정한다: `plan`, `design`, `server`, `front`, `chore` 중 하나 이상. 혼합 변경은 해당 라벨을 함께 지정한다.")
 
     if conf["dev"] and is_dev_cmd:
         check_dev_flow(root, conf, command, git(root, "branch", "--show-current").strip())
@@ -165,6 +171,9 @@ def main():
         return
     args = commit.group(1)
     branch = git(root, "branch", "--show-current").strip()
+
+    if branch and branch in conf["protected"]:
+        block("protected-commit", f"`{branch}`는 보호 브랜치다(기획 설정 \"보호 브랜치\"). 기획은 plan/<ID>-<slug>, 작은 설정·문서 수정은 `{conf['base']}`에서 만든 chore/<slug>·docs/<slug>, 코드는 개발 브랜치에서 만든 작업 브랜치에 커밋하고 PR로 합친다.")
 
     # 메시지는 -m/-F(heredoc) 로 주어질 때만 검사한다. 편집기·--amend --no-edit 는 건너뛴다.
     has_msg = re.search(r"(^|\s)(-m|--message|-F|--file)\b|-[a-z]*m\b", args)
