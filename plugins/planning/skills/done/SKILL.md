@@ -1,6 +1,6 @@
 ---
 name: done
-description: 기획 브랜치를 마무리한다 — 백로그 완료 처리, PR로 기본 브랜치에 합치기(원격이 없으면 로컬 합치기), 로컬 브랜치 삭제
+description: 기획 브랜치를 마무리한다 — 백로그 완료 처리, PR로 기본 브랜치에 합치기(원격이 없으면 로컬 합치기, 보호 브랜치면 리뷰 게이트를 통과할 때까지 다시 실행), 로컬 브랜치 삭제
 disable-model-invocation: true
 argument-hint: "[ID]"
 ---
@@ -32,6 +32,10 @@ argument-hint: "[ID]"
      gh pr merge <PR 번호> --merge --subject "docs: <ID> <주제> 기획" --body "Closes #<이슈>"
      ```
      항목에 이슈가 없으면 `Closes` 줄을 뺀다. 대상 저장소에 `plan` 라벨이 있는지 먼저 확인하고 없으면 생성한다. PR 주소와 적용 라벨을 보여 준다.
+   - **보호 브랜치** (기획 설정 "보호 브랜치"에 기본 브랜치가 있을 때): 리뷰 게이트 때문에 첫 실행에서는 보통 머지되지 않는다. `done`은 실행할 때마다 같은 순서로 머지를 시도하고, 막히면 멈춘다. `--auto`·`--admin`은 쓰지 않는다.
+     1. 이 브랜치의 PR을 찾는다(`gh pr view <브랜치> --json number,state,url,headRefOid`). 이미 머지됐으면 7로 간다. 없으면 위 명령으로 push와 `gh pr create`를 한다. 있으면 로컬에 새 커밋이 있을 때만 push한다. 4의 완료 처리 커밋이 이미 있으면 다시 하지 않는다.
+     2. 머지를 시도한다: `gh pr merge <PR 번호> --merge --match-head-commit <로컬 HEAD> --subject "docs: <ID> <주제> 기획" --body "Closes #<이슈>"`.
+     3. 막히면 이유를 보여 주고 멈춘다: `gh pr checks <PR 번호>`의 대기·실패 체크, 해결되지 않은 리뷰 대화(`gh api graphql`로 `reviewThreads`의 `isResolved: false`와 첫 댓글 주소). 리뷰 지적은 고쳐서 `/planning:commit` 뒤 다시 `done`, 리뷰 대기면 끝난 뒤 다시 `done`을 안내한다. 보호 규칙을 바꾸거나 우회하지 않는다.
    - **로컬 방식** (원격이 없을 때):
      ```bash
      git switch <기본 브랜치>
@@ -39,7 +43,7 @@ argument-hint: "[ID]"
      ```
    - **worktree:** 기본 브랜치가 다른 worktree에 체크아웃돼 있으면(`git worktree list`) 이 폴더에서 `git switch`할 수 없다. 로컬 방식이면 그 폴더에서 `git -C <폴더> merge …`로 합친다.
    - `backlog.md`, `log.md` 충돌은 양쪽 항목을 모두 살려 푼다(log는 날짜순, backlog는 ID순). 그 외 충돌은 내용을 보여 주고 사용자에게 묻는다.
-7. **정리**:
+7. **정리** (PR이 실제로 머지된 뒤에만):
    - 기본 브랜치가 체크아웃된 폴더에서 `git pull --ff-only`로 원격에 맞춘다(PR 방식).
    - 합쳐진 것을 확인한 뒤 로컬 브랜치를 지운다(`git branch -d`). 지금 폴더가 그 브랜치에 있으면 먼저 `git switch --detach origin/<기본>`(worktree) 또는 `git switch <기본>`.
    - 원격 브랜치는 지우지 않고, 지울지 묻지도 않는다(`rules` 1.5). 사용자가 직접 지운다.
@@ -47,6 +51,6 @@ argument-hint: "[ID]"
 8. **요약**: 합쳐진 커밋(머지 커밋, PR 번호), 닫힌 기획 이슈, 생성하거나 재사용한 디자인·개발 이슈, 의존 순서, 다음 실행 작업을 짧게 보여 준다.
 
 ## 규칙
-- 합치기(PR 생성·머지 포함)는 사용자 확인 후에만 한다. 합친 뒤 로컬 브랜치 삭제는 확인 없이 한다. 원격 브랜치는 지우지 않는다.
+- 합치기(PR 생성·머지 포함)는 사용자 확인 후에만 한다. 보호 브랜치에서 다시 실행할 때도 5의 미리보기를 보여 주고 확인받은 뒤 머지를 시도한다. 합친 뒤 로컬 브랜치 삭제는 확인 없이 한다. 원격 브랜치는 지우지 않는다.
 - push는 이 절차의 PR 방식에서 사용자가 합치기를 확인했을 때, 또는 사용자가 요청할 때만 한다.
 - `--force`, `reset --hard`를 쓰지 않는다.

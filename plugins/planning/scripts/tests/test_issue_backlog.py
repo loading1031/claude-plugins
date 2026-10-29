@@ -82,6 +82,38 @@ class IssueBacklogTest(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn('settings-conflict', result.stderr)
 
+    def run_command(self, command):
+        payload = {'cwd': str(self.root), 'tool_input': {'command': command}}
+        return subprocess.run(['python3', str(SCRIPT)], input=json.dumps(payload), text=True, capture_output=True)
+
+    def test_protected_branch_rejects_direct_commit(self):
+        self.configure('- 백로그: file\n- 보호 브랜치: dev, main (GitHub 보호 규칙)\n')
+        self.assertEqual(policy.settings(self.root)['protected'], ['dev', 'main'])
+        self.git('switch', '-qc', 'dev')
+        result = self.run_command('git commit -m "chore: 설정"')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('protected-commit', result.stderr)
+
+    def test_unprotected_base_keeps_direct_chore_commit(self):
+        self.configure('- 백로그: file\n- 보호 브랜치: 없음\n')
+        self.git('switch', '-qc', 'dev')
+        self.assertEqual(self.run_command('git commit -m "chore: 설정"').returncode, 0)
+
+    def test_small_change_branch_may_start_from_base(self):
+        self.configure('- 개발 브랜치: next\n- 보호 브랜치: dev, next\n')
+        self.git('switch', '-qc', 'dev')
+        self.assertEqual(self.run_command('git switch -c chore/gitignore origin/dev').returncode, 0)
+        result = self.run_command('git switch -c feat/M1-auth origin/dev')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('dev-branch-from', result.stderr)
+
+    def test_chore_label_is_accepted(self):
+        self.configure('- 백로그: file\n')
+        self.assertEqual(self.run_command('gh pr create --base dev --label chore --title t --body b').returncode, 0)
+        result = self.run_command('gh pr create --base dev --title t --body b')
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('pr-label-required', result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

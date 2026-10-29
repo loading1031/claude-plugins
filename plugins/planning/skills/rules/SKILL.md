@@ -23,6 +23,7 @@ user-invocable: false
 | 동기화 표 | 없음 | "무엇이 바뀌면 어디를 함께 고치나". 프로젝트 표가 있으면 아래 1.4의 기본 표보다 우선 |
 | 기본 브랜치 | `main` | 기획이 끝나면 합쳐지는 브랜치 |
 | 개발 브랜치 | 없음 | 있으면(예: `dev`) 코드 작업은 이 브랜치에서 분기한 작업 브랜치에서 하고 이 브랜치로 PR 한다. 기획은 그대로 기본 브랜치. 훅이 기본 브랜치에서 코드 브랜치 만들기, 기본·개발 브랜치에 바로 코드 커밋(`feat|fix|refactor|test`), 코드 PR의 base가 개발 브랜치가 아닌 것을 막는다 |
+| 보호 브랜치 | 없음 | 바로 커밋하지 않고 PR로만 합치는 브랜치(쉼표로 구분, 예: `main, dev`). GitHub 보호 규칙(필수 체크·리뷰 대화 해결 등)과 맞춘다. 있으면 1.5 "바로 커밋해도 되는 것"이 그 브랜치에는 적용되지 않는다. 훅이 이 브랜치에서의 커밋을 막는다 |
 | 기획 브랜치 | `plan/<ID>-<slug>` | 백로그 항목 하나당 브랜치 하나. 예: `plan/B-03-frontend` |
 | 합치기 방식 | 원격이 GitHub이면 `PR`, 없으면 `local` | `PR`: 머지 커밋 방식으로 PR을 합치고 PR 본문의 `Closes #N`으로 이슈를 닫음. `local`: `git merge --no-ff`. 둘 다 squash·rebase는 쓰지 않음 |
 | 금지어 | 없음 | 기획 폴더에 쓰지 않을 말(쉼표로 구분). 훅이 커밋 때 검사한다. 인용(`"단계"`)은 허용 |
@@ -124,7 +125,7 @@ main ──┬──────────────●── (merge) ──
 | `/planning:backlog pick <ID>` | 작업 트리가 깨끗한지 확인 → 기본 브랜치 최신에서 `plan/<ID>-<slug>` 생성·전환. backlog.md에서 항목을 "진행 중"으로 옮기고 브랜치 이름과 이슈 번호를 적는다(이슈 방식이면 이슈가 없을 때 만든다) |
 | `/planning:spec` | 해당 항목의 브랜치 위에서만 문서를 고친다. 기본 브랜치에 있으면 멈추고 브랜치를 만들지 묻는다 |
 | `/planning:commit` | 기획 브랜치에 커밋한다. 본문 끝에 `Refs: #<이슈>`(없으면 `Refs: <ID>`). 기본 브랜치에 `docs:` 커밋을 하려 하면 확인을 받는다 |
-| `/planning:done` | backlog.md "완료"로 옮긴 뒤, 사용자 확인 후 기본 브랜치로 합친다(합치기 방식: PR 또는 로컬 `--no-ff`). 로컬 브랜치만 지운다 |
+| `/planning:done` | backlog.md "완료"로 옮긴 뒤, 사용자 확인 후 기본 브랜치로 합친다(합치기 방식: PR 또는 로컬 `--no-ff`). 보호 브랜치면 실행할 때마다 머지를 시도하고, 리뷰·체크가 남아 막히면 이유를 보여 주고 멈춘다. 합쳐진 뒤 로컬 브랜치만 지운다 |
 
 - slug는 주제를 2~3 단어 kebab-case 영어로.
 - 브랜치를 오가기 전에는 커밋되지 않은 변경이 없어야 한다. 있으면 커밋할지, 어디에 둘지 묻는다. 임의로 stash하지 않는다.
@@ -135,6 +136,7 @@ main ──┬──────────────●── (merge) ──
 - **worktree:** 기본 브랜치가 다른 worktree에 체크아웃돼 있으면 이 폴더에서는 기본 브랜치로 전환할 수 없다. 새 브랜치는 `git fetch` 뒤 `git switch -c plan/<ID>-<slug> origin/<기본>`(원격이 없으면 `<기본>`)로 만들고, 로컬 합치기는 기본 브랜치가 열린 폴더에서 한다.
 - **커밋과 이슈:** 커밋은 `Refs: #<이슈>`로 이슈를 가리키고, 이슈는 PR 본문의 `Closes #<이슈>`로만 닫는다.
 - **기본 브랜치에 바로 커밋해도 되는 것:** 설정·도구 변경(`chore:`), 그리고 **결정을 더하거나 바꾸지 않는 작은 문서 수정**(`docs:` — 오타, 깨진 링크, 문구 다듬기, 이미 정한 내용의 위치 이동). 결정이 하나라도 들어가면 기획 브랜치에서 한다. 이 경우 log.md에는 쓰지 않는다.
+- **보호 브랜치일 때:** 기본 브랜치가 "보호 브랜치"에 있으면 위 예외도 바로 커밋하지 않는다. 진행 중인 기획 항목과 관련 있으면 그 `plan/` 브랜치에 함께 커밋하고, 아니면 기본 브랜치 최신에서 `chore/<slug>`(설정·도구) 또는 `docs/<slug>`(작은 문서 수정)를 만들어 PR(라벨 `chore`)로 합친다. 이 두 접두어는 코드 브랜치로 보지 않으므로 개발 브랜치가 있어도 기본 브랜치에서 만든다. 백로그만 바꾸는 커밋도 같다.
 
 ### 1.5.0 PR 라벨
 
@@ -146,6 +148,7 @@ GitHub PR을 만들 때 변경 범위에 맞는 아래 라벨을 하나 이상 �
 | `design` | IA·화면 설명·와이어프레임·디자인 산출물 변경 | `a371f7` | 디자인 산출물 |
 | `server` | 서버·API·데이터 계층 변경 | `1d76db` | 백엔드와 서버 변경 |
 | `front` | 사용자 화면·프런트엔드 변경 | `0e8a16` | 프런트엔드 변경 |
+| `chore` | 설정·도구·작은 문서 수정(결정 없음) | `fbca04` | 설정·도구와 작은 수정 |
 
 PR을 만들기 전에 대상 저장소에 필요한 라벨이 있는지 확인한다. 빠진 라벨만 만든다. 기존 라벨의 색·설명은 자동으로 덮어쓰지 않는다.
 
@@ -155,6 +158,7 @@ gh label create plan --repo OWNER/REPO --color 5319e7 --description "기획과 �
 gh label create design --repo OWNER/REPO --color a371f7 --description "디자인 산출물"
 gh label create server --repo OWNER/REPO --color 1d76db --description "백엔드와 서버 변경"
 gh label create front --repo OWNER/REPO --color 0e8a16 --description "프런트엔드 변경"
+gh label create chore --repo OWNER/REPO --color fbca04 --description "설정·도구와 작은 수정"
 ```
 
 라벨이 없으면 저장소의 라벨 관리자 권한으로 생성할 수 있는지 확인한다. 권한·네트워크 문제를 우회하지 말고 라벨을 적용하지 못했다는 점을 PR 작성자에게 알린다.
@@ -170,7 +174,8 @@ gh label create front --repo OWNER/REPO --color 0e8a16 --description "프런트�
 | `commit-refs` | 기본 브랜치가 아닌 곳에서 `Refs:` 없는 커밋 |
 | `code-branch-docs` | `plan/…`이 아닌 작업 브랜치에서 기획 폴더 커밋 |
 | `banned-word` | 기획 폴더에 새로 쓴 줄의 금지어 |
-| `pr-label-required` | GitHub PR 생성 명령에 `--label`이 없음 |
+| `protected-commit` | "보호 브랜치"에 있는 브랜치에서의 커밋 |
+| `pr-label-required` | GitHub PR 생성 명령에 분류 라벨(`plan`·`design`·`server`·`front`·`chore`)이 없음 |
 
 ## 1.6 작업지시서
 
